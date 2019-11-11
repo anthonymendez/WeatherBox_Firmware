@@ -32,7 +32,15 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
- 
+/*
+ * Left 3 bits are channel select
+ * 2nd Bit from the right is SGL/DIFF
+ * Rightmost Bit is start bit
+ */
+#define ADC_DIN_CH0 0b00011
+#define ADC_DIN_CH1 0b10011
+#define ADC_DIN_CH2 0b01011
+#define ADC_DIN_CH3 0b11011
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -42,7 +50,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,7 +65,7 @@
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN EV */
-
+extern SPI_HandleTypeDef hspi1;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -88,6 +95,7 @@ void HardFault_Handler(void)
   while (1)
   {
     /* USER CODE BEGIN W1_HardFault_IRQn 0 */
+	  break;
     /* USER CODE END W1_HardFault_IRQn 0 */
   }
 }
@@ -144,19 +152,27 @@ void SysTick_Handler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
-
+  uint8_t wind_speed = 0;
+  uint8_t adc_ch_select = (uint8_t)(ADC_DIN_CH0);
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
-  int delay = 500;
+  int timeout = 500;
   /* Toggle LED to signify interrupt */
   HAL_GPIO_TogglePin(User_LED_GPIO_Port, User_LED_Pin);
 
-  /* Toggle SS0 Pin Low to select sensor */
+  /* Toggle SS0 Pin (CS) Low to select wind sensor */
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
+  /* Send to DIN CH0 Select */
+  HAL_SPI_Transmit(&hspi1, &adc_ch_select, sizeof(adc_ch_select), timeout);
+  /* Read from Dout of ADC */
+  HAL_SPI_Receive(&hspi1, &wind_speed, sizeof(wind_speed), timeout);
   // TODO: Read from Sensor
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
-  /* Toggle SS0 High to un-select sensor */
+  /* Toggle SS0 High (CS) to un-select sensor */
+
+  /* Calculate Wind Sensor Voltage */
+  float wind_speed_vin = 5.0 * wind_speed / 1024;
 
   /* Toggle SS1 Pin Low to select sensor */
   HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);

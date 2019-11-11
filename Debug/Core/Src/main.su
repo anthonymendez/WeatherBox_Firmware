@@ -4,4 +4,4 @@ main.c:159:13:MX_NVIC_Init	8	static
 main.c:171:13:MX_SPI1_Init	8	static
 main.c:209:13:MX_TIM2_Init	56	static
 main.c:261:13:MX_GPIO_Init	56	static
-main.c:325:6:Error_Handler	8	static
+main.c:328:6:Error_Handler	8	static
