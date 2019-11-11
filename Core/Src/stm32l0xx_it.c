@@ -148,7 +148,27 @@ void TIM2_IRQHandler(void)
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
+  int delay = 500;
+  /* Toggle LED to signify interrupt */
   HAL_GPIO_TogglePin(User_LED_GPIO_Port, User_LED_Pin);
+
+  /* Toggle SS0 Pin Low to select sensor */
+  HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
+  // TODO: Read from Sensor
+  HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
+  /* Toggle SS0 High to un-select sensor */
+
+  /* Toggle SS1 Pin Low to select sensor */
+  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
+  // TODO: Read from Sensor
+  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
+  /* Toggle SS1 High to un-select sensor */
+
+  /* Toggle SS2 Pin Low to select sensor */
+  HAL_GPIO_TogglePin(SS2_GPIO_Port, SS2_Pin);
+  // TODO: Read from Sensor
+  HAL_GPIO_TogglePin(SS2_GPIO_Port, SS2_Pin);
+  /* Toggle SS2 High to un-select sensor */
   /* USER CODE END TIM2_IRQn 1 */
 }
 
