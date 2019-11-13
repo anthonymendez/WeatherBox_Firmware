@@ -54,7 +54,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+static unsigned int reverse(uint16_t);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

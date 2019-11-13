@@ -4,3 +4,5 @@ stm32l0xx_it.c:106:6:SVC_Handler	8	static
 stm32l0xx_it.c:119:6:PendSV_Handler	8	static
 stm32l0xx_it.c:132:6:SysTick_Handler	8	static
 stm32l0xx_it.c:152:6:TIM2_IRQHandler	32	static
+stm32l0xx_it.c:193:21:reverse	24	static
+stm32l0xx_it.c:205:17:convert_from_adc	16	static

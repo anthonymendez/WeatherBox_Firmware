@@ -54,7 +54,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-
+static uint16_t convert_from_adc(uint16_t);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -152,7 +152,7 @@ void SysTick_Handler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
-  uint16_t wind_speed = 0;
+  uint16_t wind_speed_adc = 0;
   uint16_t adc_ch_select = (uint16_t)(ADC_DIN_CH0);
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -166,14 +166,14 @@ void TIM2_IRQHandler(void)
   /* Send to DIN CH0 Select */
   HAL_SPI_Transmit(&hspi1, &adc_ch_select, sizeof(adc_ch_select), timeout);
   /* Read from Dout of ADC */
-  HAL_SPI_Receive(&hspi1, &wind_speed, sizeof(wind_speed), timeout);
+  HAL_SPI_Receive(&hspi1, &wind_speed_adc, sizeof(wind_speed_adc), timeout);
   // TODO: Read from Sensor
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
   /* Toggle SS0 High (CS) to un-select sensor */
 
   /* Calculate Wind Sensor Voltage */
-  wind_speed = wind_speed >> 6;
-  float wind_speed_vin = 5.0 * wind_speed / 1024;
+  uint16_t wind_speed_digital = convert_from_adc(wind_speed_adc);
+  float wind_speed_vin = 5.0 * wind_speed_digital / 1024;
 
   /* Toggle SS1 Pin Low to select sensor */
   HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
@@ -190,6 +190,21 @@ void TIM2_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+static unsigned int reverse(uint16_t x)
+{
+	/* Retrieved from https://stackoverflow.com/questions/746171/efficient-algorithm-for-bit-reversal-from-msb-lsb-to-lsb-msb-in-c */
+	uint16_t y = 0;
+	int position = 15;
+	for(; position >= 0; position--){
+		y += ((x&1) << position);
+		x >>= 1;
+	}
+	return y;
+}
 
+static uint16_t convert_from_adc(uint16_t adc_value)
+{
+	return reverse(adc_value) << 2;
+}
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
