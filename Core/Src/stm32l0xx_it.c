@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include <math.h>
 #include "main.h"
 #include "stm32l0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
@@ -33,7 +34,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 /*
- * Left 3 bits are channel select
+ * Left 3 bits are channel select D0, D1, D2
  * 2nd Bit from the right is SGL/DIFF
  * Rightmost Bit is start bit
  */
@@ -41,6 +42,9 @@
 #define ADC_DIN_CH1 0b10011
 #define ADC_DIN_CH2 0b01011
 #define ADC_DIN_CH3 0b11011
+/* Sensor Mappings */
+#define ADC_WIND_SENSOR_SPEED ADC_DIN_CH0
+#define ADC_WIND_SENSOR_TEMP ADC_DIN_CH1
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,11 +54,15 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+// Mapped to a zero voltage on the first measurement
+float zero_voltage = -1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-static uint16_t convert_from_adc(uint16_t);
+static uint16_t reverse_and_shift_adc_value(uint16_t);
+static float adc_to_voltage(uint16_t);
+static float calculate_wind_speed(uint16_t, uint16_t);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -152,8 +160,10 @@ void SysTick_Handler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
-  uint16_t wind_speed_adc = 0;
-  uint16_t adc_ch_select = (uint16_t)(ADC_DIN_CH0);
+  uint16_t adc_value = 0;
+  uint16_t adc_ch_select = (uint16_t)(ADC_WIND_SENSOR_SPEED);
+  uint16_t wind_speed_digital = -1;
+  uint16_t wind_temp_digital = -1;
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
@@ -161,19 +171,29 @@ void TIM2_IRQHandler(void)
   /* Toggle LED to signify interrupt */
   HAL_GPIO_TogglePin(User_LED_GPIO_Port, User_LED_Pin);
 
-  /* Toggle SS0 Pin (CS) Low to select wind sensor */
+  /* Toggle SS0 Pin (CS) Low to use ADC */
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
   /* Send to DIN CH0 Select */
   HAL_SPI_Transmit(&hspi1, &adc_ch_select, sizeof(adc_ch_select), timeout);
   /* Read from Dout of ADC */
-  HAL_SPI_Receive(&hspi1, &wind_speed_adc, sizeof(wind_speed_adc), timeout);
-  // TODO: Read from Sensor
+  HAL_SPI_Receive(&hspi1, &adc_value, sizeof(adc_value), timeout);
+  /* Toggle SS0 High (CS) to signify we're done with a round of the ADC */
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
-  /* Toggle SS0 High (CS) to un-select sensor */
-
-  /* Calculate Wind Sensor Voltage */
-  uint16_t wind_speed_digital = convert_from_adc(wind_speed_adc);
-  float wind_speed_vin = 5.0 * wind_speed_digital / 1024;
+  /* Set Wind_Speed_Digital to adc_value */
+  wind_speed_digital = adc_value;
+  /* Change ADC Channel Select to the ADC Wind Sensor Temperature Output */
+  // TODO: Figure out why we're getting 0 for wind sensor temperature
+  adc_ch_select = (uint16_t)(ADC_WIND_SENSOR_TEMP);
+  /* Toggle SS0 Pin (CS) Low to use ADC */
+  HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
+  /* Toggle SS0 Pin (CS) Low to use ADC */
+  HAL_SPI_Transmit(&hspi1, &adc_ch_select, sizeof(adc_ch_select), timeout);
+  /* Read from Dout of ADC */
+  HAL_SPI_Receive(&hspi1, &adc_value, sizeof(adc_value), timeout);
+  /* Toggle SS0 High (CS) to signify we're done with a round of the ADC */
+  HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
+  /* Set Wind_Speed_Digital to adc_value */
+  wind_temp_digital = adc_value;
 
   /* Toggle SS1 Pin Low to select sensor */
   HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
@@ -186,13 +206,20 @@ void TIM2_IRQHandler(void)
   // TODO: Read from Sensor
   HAL_GPIO_TogglePin(SS2_GPIO_Port, SS2_Pin);
   /* Toggle SS2 High to un-select sensor */
+
+  /* Calculations Done Here */
+  float wind_speed = calculate_wind_speed(wind_speed_digital, wind_temp_digital);
+  int t = 0;
   /* USER CODE END TIM2_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */
-static unsigned int reverse(uint16_t x)
+/**
+ * 	@brief Function handles converting from LSB o MSB and vice versa
+ */
+static uint16_t reverse(uint16_t x)
 {
-	/* Retrieved from https://stackoverflow.com/questions/746171/efficient-algorithm-for-bit-reversal-from-msb-lsb-to-lsb-msb-in-c */
+	/* Retrieved from http://www.geekviewpoint.com/java/bitwise/reverse_bits_short */
 	uint16_t y = 0;
 	int position = 15;
 	for(; position >= 0; position--){
@@ -202,9 +229,68 @@ static unsigned int reverse(uint16_t x)
 	return y;
 }
 
-static uint16_t convert_from_adc(uint16_t adc_value)
+/**
+ * 	@brief Function handles reversing the bit order then shifting it to the left by 2
+ */
+static uint16_t reverse_and_shift_adc_value(uint16_t adc_value)
 {
 	return reverse(adc_value) << 2;
+}
+
+/**
+ * 	@brief Function handles converting adc value to a voltage.
+ * 	Call reverse_and_shift_adc_value before hand.
+ */
+static float adc_to_voltage(uint16_t adc_value)
+{
+	return 5.0 * adc_value / 1024;;
+}
+
+/**
+ * 	@brief Function handles calculating wind speed from the input voltage.
+ * 	Uses the equation from Modern Device
+ *  WS_MPH = (((Volts – ZeroWind_V) / (3.038517 * (Temp_C ^ 0.115157 ))) / 0.087288 ) ^ 3.009364
+ *	WS_MPH: wind speed in miles per hour
+ *	Volts: the output of the Wind Sensor Rev. P at the “Out” pin in volts
+ *	Temp_C: temperature in degrees C
+ *	ZeroWind_V: zero wind voltage – measured with the sensor angled at the edge of a table with a glass
+ *	over the tip (loop etc.) of the sensor. Let the sensor stabilize for 40 seconds or so, when the voltage
+ *	stops dropping and stabilizes, record the voltage.
+ *
+ *	To calculate Ambient Temperature from the Modern Device Sensor
+ *	Tambient = ( Vout – V0°C ) / TC
+ *	Checking the datasheet,
+ *	VOUT = Temperature Output Voltage
+ *	TC, temperature coefficient for our part is 19.5 mV/°C
+ *	V0°C, the voltage at zero degrees C is 400 mV
+ *	Tambient = ( Vout – 0.400 ) / 0.0195
+ *	TODO: Wait 40 seconds until we do the first measurement to let the wind sensor stabilize
+ *	TODO: Use the Bosch sensor for ambiant temperature instead of the onboard Modern Device Sensor
+ * 	https://moderndevice.com/uncategorized/calibrating-rev-p-wind-sensor-new-regression/?preview=true
+ */
+static float calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_adc)
+{
+	// Format ADC values
+	wind_speed_adc = reverse_and_shift_adc_value(wind_speed_adc);
+	wind_temp_adc = reverse_and_shift_adc_value(wind_temp_adc);
+
+	// Calculate Vin from ADC
+	float wind_speed_vout = adc_to_voltage(wind_speed_adc);
+	float wind_temp_vout = adc_to_voltage(wind_temp_adc);
+
+	// Zero Voltage not set, set here
+	if (zero_voltage == -1) {
+		zero_voltage = wind_speed_vout;
+	}
+
+	// Calculate Ambient Temperature
+	float TempAmb = (wind_temp_vout - 0.400) / 0.0195;
+
+	// Calculate the Wind Speed in MPH
+	float wind_speed = (wind_speed_vout - zero_voltage) / (3.038517 * pow(TempAmb, 0.115157));
+	wind_speed /= 0.087288;
+	wind_speed = pow(wind_speed, 3.009364);
+	return wind_speed;
 }
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
