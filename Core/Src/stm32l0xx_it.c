@@ -95,7 +95,7 @@ void HardFault_Handler(void)
   while (1)
   {
     /* USER CODE BEGIN W1_HardFault_IRQn 0 */
-	  break;
+
     /* USER CODE END W1_HardFault_IRQn 0 */
   }
 }
@@ -152,8 +152,8 @@ void SysTick_Handler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
-  uint8_t wind_speed = 0;
-  uint8_t adc_ch_select = (uint8_t)(ADC_DIN_CH0);
+  uint16_t wind_speed = 0;
+  uint16_t adc_ch_select = (uint16_t)(ADC_DIN_CH0);
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
@@ -172,6 +172,7 @@ void TIM2_IRQHandler(void)
   /* Toggle SS0 High (CS) to un-select sensor */
 
   /* Calculate Wind Sensor Voltage */
+  wind_speed = wind_speed >> 6;
   float wind_speed_vin = 5.0 * wind_speed / 1024;
 
   /* Toggle SS1 Pin Low to select sensor */
