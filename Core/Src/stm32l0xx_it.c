@@ -61,8 +61,8 @@ float zero_voltage = -1;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-static uint16_t reverse(uint8_t);
-static uint16_t reverse_and_shift_adc_value(uint8_t);
+static uint16_t reverse(uint16_t);
+static uint16_t reverse_and_shift_adc_value(uint16_t);
 static float adc_to_voltage(uint16_t);
 static float calculate_wind_speed(uint16_t, uint16_t);
 /* USER CODE END PFP */
@@ -163,16 +163,21 @@ void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
   uint8_t adc_start = (uint8_t)ADC_START_BIT;
+  uint8_t adc_ch_select = (uint8_t)(ADC_WIND_SENSOR_SPEED_CH);
   uint8_t adc_byte_1 = 0;
   uint8_t adc_byte_2 = 0;
   uint16_t adc_value = 0;
-  uint8_t adc_ch_select = (uint8_t)(ADC_WIND_SENSOR_SPEED_CH);
-  uint16_t wind_speed_digital = -1;
-  uint16_t wind_temp_digital = -1;
+  uint16_t wind_speed = 0;
+  uint16_t wind_speed_shift = 0;
+  uint16_t wind_speed_digital = 0;
+  uint16_t wind_temp_digital = 0;
+  float wind_speed_vout = 0;
+  float wind_speed_shift_vout = 0;
+  float wind_temp_vout = 0;
+  int timeout = 500;
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
-  int timeout = 500;
   /* Toggle LED to signify interrupt */
   HAL_GPIO_TogglePin(User_LED_GPIO_Port, User_LED_Pin);
 
@@ -180,16 +185,21 @@ void TIM2_IRQHandler(void)
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
   /* Send to DIN CH0 Select */
   HAL_SPI_Transmit(&hspi1, &adc_start, sizeof(adc_start), timeout);
-  HAL_SPI_Transmit(&hspi1, &adc_ch_select, sizeof(adc_ch_select), timeout);
+  HAL_SPI_TransmitReceive(&hspi1, &adc_ch_select, &adc_byte_1, sizeof(adc_ch_select), timeout);
   /* Read from Dout of ADC */
-  HAL_SPI_Receive(&hspi1, &adc_byte_1, sizeof(adc_byte_1), timeout);
   HAL_SPI_Receive(&hspi1, &adc_byte_2, sizeof(adc_byte_2), timeout);
+  //HAL_SPI_Receive(&hspi1, &adc_byte_2, sizeof(adc_byte_2), timeout);
   /* Toggle SS0 High (CS) to signify we're done with a round of the ADC */
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
   /* Set Wind_Speed_Digital to adc_value */
-  wind_speed_digital = adc_byte_2;
+  adc_value = ((adc_byte_1 & 0x03) << 8) | adc_byte_2;
+  wind_speed = adc_value;
+  //wind_speed_shift = reverse(adc_value);
+  wind_speed_vout = adc_to_voltage(wind_speed >> 1);
+  //wind_speed_shift_vout = adc_to_voltage(wind_speed_shift);
   /* Change ADC Channel Select to the ADC Wind Sensor Temperature Output */
   // TODO: Figure out why we're getting not the right value
+  adc_byte_1 = 0;
   adc_byte_2 = 0;
   adc_ch_select = (uint8_t)ADC_DIN_CH1 ;
   //adc_value = 0;
@@ -197,14 +207,15 @@ void TIM2_IRQHandler(void)
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
   /* Send to DIN CH1 Select */
   HAL_SPI_Transmit(&hspi1, &adc_start, sizeof(adc_start), timeout);
-  HAL_SPI_Transmit(&hspi1, &adc_ch_select, sizeof(adc_ch_select), timeout);
+    HAL_SPI_TransmitReceive(&hspi1, &adc_ch_select, &adc_byte_1, sizeof(adc_ch_select), timeout);
   /* Read from Dout of ADC */
-  HAL_SPI_Receive(&hspi1, &adc_byte_1, sizeof(adc_byte_1), timeout);
-  HAL_SPI_Receive(&hspi1, &adc_byte_2, sizeof(adc_byte_2), timeout);
+  HAL_SPI_Receive(&hspi1, &adc_byte_2, sizeof(adc_byte_1), timeout);
+  //HAL_SPI_Receive(&hspi1, &adc_byte_2, sizeof(adc_byte_2), timeout);
   /* Toggle SS0 High (CS) to signify we're done with a round of the ADC */
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
   /* Set Wind_Speed_Digital to adc_value */
-  wind_temp_digital = adc_byte_2;
+  wind_temp_digital = ((adc_byte_1 & 0x03) << 8) | adc_byte_2;
+  wind_temp_vout = adc_to_voltage(wind_temp_digital >> 1);
   uint8_t wind_temp_shift = reverse(wind_temp_digital);
 
   /* Toggle SS1 Pin Low to select sensor */
@@ -220,7 +231,7 @@ void TIM2_IRQHandler(void)
   /* Toggle SS2 High to un-select sensor */
 
   /* Calculations Done Here */
-  float wind_speed = calculate_wind_speed(wind_speed_digital, wind_temp_digital);
+//  float wind_speed = calculate_wind_speed(wind_speed_digital, wind_temp_digital);
   int t = 0;
   /* USER CODE END TIM2_IRQn 1 */
 }
@@ -229,17 +240,17 @@ void TIM2_IRQHandler(void)
 /**
  * 	@brief Function handles converting from LSB o MSB and vice versa
  */
-static uint16_t reverse(uint8_t x)
+static uint16_t reverse(uint16_t x)
 {
 	/* Retrieved from http://www.geekviewpoint.com/java/bitwise/reverse_bits_short */
-	uint8_t modX = x;
-	uint8_t y = 0;
+	uint16_t modX = x;
+	uint16_t y = 0;
 	int position = 7;
 	for(; position >= 0; position--){
 		y += ((modX&1) << position);
 		modX >>= 1;
 	}
-	return (uint16_t) y << 1;
+	return (uint16_t) y;
 }
 
 /**
@@ -285,8 +296,8 @@ static float adc_to_voltage(uint16_t adc_value)
 static float calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_adc)
 {
 	// Format ADC values
-	wind_speed_adc = reverse(wind_speed_adc);
-	wind_temp_adc = reverse(wind_temp_adc);
+//	wind_speed_adc = reverse(wind_speed_adc);
+//	wind_temp_adc = reverse(wind_temp_adc);
 
 	// Calculate Vin from ADC
 	float wind_speed_vout = adc_to_voltage(wind_speed_adc);
