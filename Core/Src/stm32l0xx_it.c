@@ -191,6 +191,7 @@ void TIM2_IRQHandler(void)
   uint16_t din_ch5 = 0;
   uint16_t din_ch6 = 0;
   uint16_t din_ch7 = 0;
+  uint16_t tph_data = 0;
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -210,17 +211,19 @@ void TIM2_IRQHandler(void)
   Read_ADC((uint8_t) ADC_DIN_CH6, &din_ch6);
   Read_ADC((uint8_t) ADC_DIN_CH7, &din_ch7);
 
-  /* Toggle SS1 Pin Low to select sensor */
-  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
-  // TODO: Read from Sensor
-  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
-  /* Toggle SS1 High to un-select sensor */
+  HAL_I2C_Master_Transmit_DMA(&hi2c1, (uint16_t)(TPH_OPEN_ADDRESS), &tph_data, sizeof(tph_data));
 
-  /* Toggle SS2 Pin Low to select sensor */
-  HAL_GPIO_TogglePin(SS2_GPIO_Port, SS2_Pin);
-  // TODO: Read from Sensor
-  HAL_GPIO_TogglePin(SS2_GPIO_Port, SS2_Pin);
-  /* Toggle SS2 High to un-select sensor */
+//  /* Toggle SS1 Pin Low to select sensor */
+//  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
+//  // TODO: Read from Sensor
+//  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
+//  /* Toggle SS1 High to un-select sensor */
+//
+//  /* Toggle SS2 Pin Low to select sensor */
+//  HAL_GPIO_TogglePin(SS2_GPIO_Port, SS2_Pin);
+//  // TODO: Read from Sensor
+//  HAL_GPIO_TogglePin(SS2_GPIO_Port, SS2_Pin);
+//  /* Toggle SS2 High to un-select sensor */
 
   /* Calculations Done Here */
   float wind_speed = calculate_wind_speed(wind_speed_digital, wind_temp_digital);
@@ -332,12 +335,14 @@ static float calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_ad
 	float wind_temp_vout = adc_to_voltage(wind_temp_adc);
 
 	// Zero Voltage not set, set here
+	// TODO: Check if 40 seconds of operation have passed before we decided to set the zero voltage.
 	if (zero_voltage == -1) {
 		zero_voltage = wind_speed_vout;
 	}
 
 	// Calculate Ambient Temperature in Celsius
 	float TempAmb = (wind_temp_vout - 0.400) / 0.0195;
+	float zero = zero_voltage;
 
 	// Calculate the Wind Speed in MPH
 	float wind_speed = (wind_speed_vout - zero_voltage) / (3.038517 * pow(TempAmb, 0.115157));

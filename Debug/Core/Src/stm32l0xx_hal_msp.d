@@ -25,7 +25,9 @@ Core/Src/stm32l0xx_hal_msp.o: ../Core/Src/stm32l0xx_hal_msp.c \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_pwr_ex.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_spi.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_tim.h \
- ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_tim_ex.h
+ ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_tim_ex.h \
+ C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280/bme280.h \
+ C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280/bme280_defs.h
 
 ../Core/Inc/main.h:
 
@@ -82,3 +84,7 @@ Core/Src/stm32l0xx_hal_msp.o: ../Core/Src/stm32l0xx_hal_msp.c \
 ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_tim.h:
 
 ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_tim_ex.h:
+
+C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280/bme280.h:
+
+C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280/bme280_defs.h:
