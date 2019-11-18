@@ -76,6 +76,7 @@ static float calculate_wind_speed(uint16_t, uint16_t);
 extern TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN EV */
 extern SPI_HandleTypeDef hspi1;
+extern I2C_HandleTypeDef hi2c1;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -166,6 +167,7 @@ void TIM2_IRQHandler(void)
   uint8_t adc_ch_select = (uint8_t)(ADC_WIND_SENSOR_SPEED_CH);
   uint8_t adc_byte_1 = 0;
   uint8_t adc_byte_2 = 0;
+
   uint16_t adc_value = 0;
   uint16_t wind_speed = 0;
   uint16_t wind_speed_shift = 0;
@@ -197,20 +199,18 @@ void TIM2_IRQHandler(void)
   //wind_speed_shift = reverse(adc_value);
   wind_speed_vout = adc_to_voltage(wind_speed);
   //wind_speed_shift_vout = adc_to_voltage(wind_speed_shift);
+
   /* Change ADC Channel Select to the ADC Wind Sensor Temperature Output */
-  // TODO: Figure out why we're getting not the right value
   adc_byte_1 = 0;
   adc_byte_2 = 0;
-  adc_ch_select = (uint8_t)ADC_DIN_CH1 ;
-  //adc_value = 0;
+  adc_ch_select = (uint8_t)ADC_DIN_CH1;
   /* Toggle SS0 Pin (CS) Low to use ADC */
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
   /* Send to DIN CH1 Select */
   HAL_SPI_Transmit(&hspi1, &adc_start, sizeof(adc_start), timeout);
-    HAL_SPI_TransmitReceive(&hspi1, &adc_ch_select, &adc_byte_1, sizeof(adc_ch_select), timeout);
+  HAL_SPI_TransmitReceive(&hspi1, &adc_ch_select, &adc_byte_1, sizeof(adc_ch_select), timeout);
   /* Read from Dout of ADC */
   HAL_SPI_Receive(&hspi1, &adc_byte_2, sizeof(adc_byte_1), timeout);
-  //HAL_SPI_Receive(&hspi1, &adc_byte_2, sizeof(adc_byte_2), timeout);
   /* Toggle SS0 High (CS) to signify we're done with a round of the ADC */
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
   /* Set Wind_Speed_Digital to adc_value */
