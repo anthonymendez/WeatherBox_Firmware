@@ -211,7 +211,8 @@ void TIM2_IRQHandler(void)
   Read_ADC((uint8_t) ADC_DIN_CH6, &din_ch6);
   Read_ADC((uint8_t) ADC_DIN_CH7, &din_ch7);
 
-  HAL_I2C_Master_Transmit_DMA(&hi2c1, (uint16_t)(TPH_OPEN_ADDRESS), &tph_data, sizeof(tph_data));
+  // TODO: Figure out how to communicate with the TPH sensor
+//  HAL_I2C_Master_Transmit_DMA(&hi2c1, (uint16_t)(TPH_OPEN_ADDRESS), &tph_data, sizeof(tph_data));
 
 //  /* Toggle SS1 Pin Low to select sensor */
 //  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
