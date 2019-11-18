@@ -195,7 +195,7 @@ void TIM2_IRQHandler(void)
   adc_value = ((adc_byte_1 & 0x03) << 8) | adc_byte_2;
   wind_speed = adc_value;
   //wind_speed_shift = reverse(adc_value);
-  wind_speed_vout = adc_to_voltage(wind_speed >> 1);
+  wind_speed_vout = adc_to_voltage(wind_speed);
   //wind_speed_shift_vout = adc_to_voltage(wind_speed_shift);
   /* Change ADC Channel Select to the ADC Wind Sensor Temperature Output */
   // TODO: Figure out why we're getting not the right value
@@ -215,7 +215,7 @@ void TIM2_IRQHandler(void)
   HAL_GPIO_TogglePin(SS0_GPIO_Port, SS0_Pin);
   /* Set Wind_Speed_Digital to adc_value */
   wind_temp_digital = ((adc_byte_1 & 0x03) << 8) | adc_byte_2;
-  wind_temp_vout = adc_to_voltage(wind_temp_digital >> 1);
+  wind_temp_vout = adc_to_voltage(wind_temp_digital);
   uint8_t wind_temp_shift = reverse(wind_temp_digital);
 
   /* Toggle SS1 Pin Low to select sensor */
