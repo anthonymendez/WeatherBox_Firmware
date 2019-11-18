@@ -56,6 +56,12 @@
 #define ADC_WIND_SENSOR_TEMP_CH ADC_DIN_CH1
 	/* ADC Output Mask */
 #define ADC_OUTPUT_MASK 0x03FF
+	/* Temperature, Pressure, Humidity Addresses */
+#define TPH_OPEN_ADDRESS 0x77
+#define TPH_CLOSED_ADDRESS 0x76
+	/* Air Quality Addresses */
+#define AQ_OPEN_ADDRESS 0x5B
+#define AQ_CLOSED_ADDRESS 0x5A
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
