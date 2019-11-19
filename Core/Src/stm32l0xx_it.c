@@ -216,10 +216,10 @@ void TIM2_IRQHandler(void)
   Read_ADC((uint8_t) ADC_DIN_CH6, &din_ch6);
   Read_ADC((uint8_t) ADC_DIN_CH7, &din_ch7);
 
-	HAL_UART_Transmit_IT(&huart2, &a, sizeof(uint16_t));
-	HAL_UART_Transmit_IT(&huart2, &t, sizeof(uint16_t));
-	HAL_UART_Receive_IT(&huart2, &wifi_data, sizeof(uint16_t));
-	HAL_UART_Receive_IT(&huart2, &wifi_data1, sizeof(uint16_t));
+  HAL_UART_Transmit_IT(&huart2, &a, sizeof(uint16_t));
+  HAL_UART_Transmit_IT(&huart2, &t, sizeof(uint16_t));
+  HAL_UART_Receive_IT(&huart2, &wifi_data, sizeof(uint16_t));
+  HAL_UART_Receive_IT(&huart2, &wifi_data1, sizeof(uint16_t));
 
 
   // TODO: Figure out how to communicate with the TPH sensor

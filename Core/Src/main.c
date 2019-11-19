@@ -108,6 +108,15 @@ int main(void)
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
 
+  struct bme280_dev bme280_device;
+  int8_t rslt = BME280_OK;
+  bme280_device.dev_id = BME280_I2C_ADDR_PRIM;
+  bme280_device.intf = BME280_I2C_INTF;
+  // TODO: Create our read, write, and delay_ms functions
+//  bme280_device.read = ?
+//  bme280_device.write = ?
+//  bme280_delay_ms = ?
+  rslt = bme280_init(&dev);
   /* USER CODE END 2 */
 
   /* Infinite loop */
