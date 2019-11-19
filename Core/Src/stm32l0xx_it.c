@@ -73,7 +73,6 @@
 /* USER CODE BEGIN PV */
 // Mapped to a zero voltage on the first measurement
 float zero_voltage = -1;
-const int SPI_TIMEOUT = 500;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -98,6 +97,9 @@ extern TIM_HandleTypeDef htim2;
 extern SPI_HandleTypeDef hspi1;
 extern I2C_HandleTypeDef hi2c1;
 extern UART_HandleTypeDef huart2;
+
+extern const int SPI_TIMEOUT;
+extern const int I2C_TIMEOUT;
 /* USER CODE END EV */
 
 /******************************************************************************/

@@ -50,7 +50,8 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+const int SPI_TIMEOUT = 500;
+const int I2C_TIMEOUT = 500;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,7 +117,7 @@ int main(void)
 //  bme280_device.read = ?
 //  bme280_device.write = ?
 //  bme280_delay_ms = ?
-  rslt = bme280_init(&dev);
+  rslt = bme280_init(&bme280_device);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -429,7 +430,7 @@ void bme280_user_delay_ms(uint32_t milliseconds)
 
 /*
  *	@brief Function Pointer for reading data from the BME280 using the I2C protocol.
- * 	@param[in] dev_id : Can be used as a variable to store the I2C address of the device.
+ * 	@param[in] dev_id : I2C address of the device.
  * 	@param[in] reg_addr : Register address of what we want to read in from the BME280.
  * 	@param[out] reg_data : Data we're reading out from the register.
  * 	@param[in] len : Length of the data we're reading out.
@@ -451,14 +452,27 @@ int8_t bme280_user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data,
 	 * | Stop       | -                   |
 	 * |------------+---------------------|
 	 */
-	//TODO: Fill in
+	//TODO: Is any of this correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
+	uint8_t write_mode = (dev_id < 1) | 0;
+	uint8_t read_mode = (dev_id < 1) | 1;
+	// Transmit Write Mode
+	HAL_I2C_Master_Transmit(&hi2c1, write_mode, &reg_addr, len, I2C_TIMEOUT);
+	// Receive Control Byte from 0xF6
+	HAL_I2C_Master_Receive(&hi2c1, 0xF6, reg_data, len, I2C_TIMEOUT);
+	// TODO: Check Control Byte is 0xF6
+	// Transmit Read Mode
+	HAL_I2C_Master_Transmit(&hi2c1, read_mode, &reg_addr, len, I2C_TIMEOUT);
+	// Receive Data from first Byte (0xF6)
+	HAL_I2C_Master_Receive(&hi2c1, 0xF6, reg_data, len, I2C_TIMEOUT);
+	// Receive Data from second Byte (0xF7)
+	HAL_I2C_Master_Receive(&hi2c1, 0xF7, reg_data, len, I2C_TIMEOUT);
 	return rslt;
 }
 
 /*
  *	@brief Function Pointer for writing data to the BME280 using the I2C protocol.
- * 	@param[in] dev_id : Can be used as a variable to store the I2C address of the device.
+ * 	@param[in] dev_id : I2C address of the device.
  * 	@param[in] reg_addr : Register address of what we want to read in from the BME280.
  * 	@param[out] reg_data : Data we're reading out from the register.
  * 	@param[in] len : Length of the data we're reading out.
