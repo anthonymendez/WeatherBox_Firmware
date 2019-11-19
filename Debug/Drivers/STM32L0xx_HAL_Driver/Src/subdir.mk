@@ -19,7 +19,9 @@ C_SRCS += \
 ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc_ex.c \
 ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_spi.c \
 ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.c \
-../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c 
+../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c \
+../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.c \
+../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.c 
 
 OBJS += \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal.o \
@@ -37,7 +39,9 @@ OBJS += \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc_ex.o \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_spi.o \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.o \
-./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.o 
+./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.o \
+./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.o \
+./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.o 
 
 C_DEPS += \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal.d \
@@ -55,7 +59,9 @@ C_DEPS += \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc_ex.d \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_spi.d \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.d \
-./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.d 
+./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.d \
+./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.d \
+./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -91,4 +97,8 @@ Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.o: ../Drivers/STM32L0xx_HAL_D
 	arm-none-eabi-gcc "$<" -mcpu=cortex-m0plus -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32L073xx -DDEBUG -c -I"C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280" -I"C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/CCS811" -I../Drivers/CMSIS/Include -I../Core/Inc -I../Drivers/STM32L0xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32L0xx/Include -I../Drivers/STM32L0xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.d" -MT"$@" --specs=nano.specs -mfloat-abi=soft -mthumb -o "$@"
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.o: ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c
 	arm-none-eabi-gcc "$<" -mcpu=cortex-m0plus -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32L073xx -DDEBUG -c -I"C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280" -I"C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/CCS811" -I../Drivers/CMSIS/Include -I../Core/Inc -I../Drivers/STM32L0xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32L0xx/Include -I../Drivers/STM32L0xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.d" -MT"$@" --specs=nano.specs -mfloat-abi=soft -mthumb -o "$@"
+Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.o: ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.c
+	arm-none-eabi-gcc "$<" -mcpu=cortex-m0plus -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32L073xx -DDEBUG -c -I"C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280" -I"C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/CCS811" -I../Drivers/CMSIS/Include -I../Core/Inc -I../Drivers/STM32L0xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32L0xx/Include -I../Drivers/STM32L0xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.d" -MT"$@" --specs=nano.specs -mfloat-abi=soft -mthumb -o "$@"
+Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.o: ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.c
+	arm-none-eabi-gcc "$<" -mcpu=cortex-m0plus -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32L073xx -DDEBUG -c -I"C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280" -I"C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/CCS811" -I../Drivers/CMSIS/Include -I../Core/Inc -I../Drivers/STM32L0xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32L0xx/Include -I../Drivers/STM32L0xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.d" -MT"$@" --specs=nano.specs -mfloat-abi=soft -mthumb -o "$@"
 

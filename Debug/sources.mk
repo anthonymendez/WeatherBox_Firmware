@@ -20,5 +20,4 @@ Core/Src \
 Core/Startup \
 Drivers/BME280 \
 Drivers/STM32L0xx_HAL_Driver/Src \
-Drivers/CCS811 \
 

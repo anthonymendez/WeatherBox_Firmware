@@ -97,6 +97,7 @@ extern TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN EV */
 extern SPI_HandleTypeDef hspi1;
 extern I2C_HandleTypeDef hi2c1;
+extern UART_HandleTypeDef huart2;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -192,6 +193,10 @@ void TIM2_IRQHandler(void)
   uint16_t din_ch6 = 0;
   uint16_t din_ch7 = 0;
   uint16_t tph_data = 0;
+  uint8_t wifi_data = 0;
+  uint8_t wifi_data1 = 0;
+  uint8_t a = 'A';
+  uint8_t t = 'T';
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -210,6 +215,12 @@ void TIM2_IRQHandler(void)
   Read_ADC((uint8_t) ADC_DIN_CH5, &din_ch5);
   Read_ADC((uint8_t) ADC_DIN_CH6, &din_ch6);
   Read_ADC((uint8_t) ADC_DIN_CH7, &din_ch7);
+
+	HAL_UART_Transmit_IT(&huart2, &a, sizeof(uint16_t));
+	HAL_UART_Transmit_IT(&huart2, &t, sizeof(uint16_t));
+	HAL_UART_Receive_IT(&huart2, &wifi_data, sizeof(uint16_t));
+	HAL_UART_Receive_IT(&huart2, &wifi_data1, sizeof(uint16_t));
+
 
   // TODO: Figure out how to communicate with the TPH sensor
 //  HAL_I2C_Master_Transmit_DMA(&hi2c1, (uint16_t)(TPH_OPEN_ADDRESS), &tph_data, sizeof(tph_data));
@@ -297,6 +308,13 @@ static uint16_t reverse(uint16_t x)
 	}
 	return (uint16_t) y;
 }
+
+/**
+ * TODO: Write function to write data to WiFi module
+ */
+
+
+
 
 /**
  * 	@brief Function handles converting adc value to a voltage.
