@@ -204,7 +204,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00000708;
+  hi2c1.Init.Timing = 0x00000609;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -218,7 +218,7 @@ static void MX_I2C1_Init(void)
   }
   /** Configure Analogue filter 
   */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_DISABLE) != HAL_OK)
   {
     Error_Handler();
   }
@@ -411,6 +411,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -487,8 +488,9 @@ int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16
 	 */
 	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
-	uint8_t read_mode = (dev_id < 1) | 1;
-	rslt = HAL_I2C_Mem_Read(&hi2c1, read_mode, reg_addr, len, reg_data, len, I2C_TIMEOUT);
+	uint16_t read_mode = (dev_id << 9) | (1 << 8) | reg_addr;
+	user_i2c_write(dev_id, reg_addr, reg_data, len);
+	rslt = HAL_I2C_Master_Receive(&hi2c1, read_mode, reg_data, len, I2C_TIMEOUT);
 	return rslt;
 }
 
@@ -516,8 +518,9 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 	 */
 	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
-	uint8_t write_mode = (dev_id < 1) | 0;
-	rslt = HAL_I2C_Mem_Write(&hi2c1, write_mode, reg_addr, len, reg_data, len, I2C_TIMEOUT);
+	uint16_t write_mode = (dev_id << 1) | 0;
+	rslt = HAL_I2C_Master_Transmit(&hi2c1, write_mode, reg_data, len, I2C_TIMEOUT);
+	rslt = HAL_I2C_Master_Transmit(&hi2c1, reg_addr, reg_data, len, I2C_TIMEOUT);
 	return rslt;
 }
 /* USER CODE END 4 */
