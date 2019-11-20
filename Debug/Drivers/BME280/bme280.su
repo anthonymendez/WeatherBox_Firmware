@@ -22,7 +22,7 @@ bme280.c:952:15:write_power_mode	32	static
 bme280.c:978:15:put_device_to_sleep	40	static
 bme280.c:1002:15:reload_device_settings	32	static
 bme280.c:1137:16:compensate_temperature	40	static
-bme280.c:1170:17:compensate_pressure	272	static
+bme280.c:1220:17:compensate_pressure	48	static
 bme280.c:1279:17:compensate_humidity	48	static
 bme280.c:1318:15:get_calib_data	64	static
 bme280.c:1354:13:interleave_reg_addr	32	static

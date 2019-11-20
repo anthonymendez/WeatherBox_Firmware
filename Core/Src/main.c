@@ -52,6 +52,9 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 const int SPI_TIMEOUT = 500;
 const int I2C_TIMEOUT = 500;
+struct bme280_settings bme280_device_settings;
+struct bme280_dev bme280_device;
+int8_t rslt = BME280_OK;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,7 +66,7 @@ static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
-
+void BME280_INIT(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -109,15 +112,6 @@ int main(void)
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
 
-  struct bme280_dev bme280_device;
-  int8_t rslt = BME280_OK;
-  bme280_device.dev_id = BME280_I2C_ADDR_PRIM;
-  bme280_device.intf = BME280_I2C_INTF;
-  // TODO: Create our read, write, and delay_ms functions
-//  bme280_device.read = ?
-//  bme280_device.write = ?
-//  bme280_delay_ms = ?
-  rslt = bme280_init(&bme280_device);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -417,6 +411,25 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+ * Initializes Bosch BME280 Temperature, Pressure, and Humidity Sensor
+ */
+void BME280_INIT(void)
+{
+	/* Device Sampling, Filter, and Standby Time Settings */
+	bme280_device_settings.osr_p = 0;				// Pressure
+	bme280_device_settings.osr_t = 0;				// Temperature
+	bme280_device_settings.osr_h = 0;				// Humidity
+	bme280_device_settings.filter = 0;				// Filter
+	bme280_device_settings.standby_time = 0;		// Standby Time
+	bme280_device.dev_id = BME280_I2C_ADDR_PRIM;	// I2C Address
+	bme280_device.intf = BME280_I2C_INTF;			// I2C Mode
+	bme280_device.read = bme280_user_i2c_read;		// Read Function Ptr
+	bme280_device.write = bme280_user_i2c_write;	// Write Function Ptr
+	bme280_device.delay_ms = bme280_user_delay_ms;	// Delay Function Ptr
+	bme280_device.settings = bme280_device_settings;// Device Settings set above
+	rslt = bme280_init(&bme280_device);				// Result code of init
+}
 /*
  *	@brief Function Pointer for Delaying the BME280.
  *	After a number of milliseconds have passed, we
@@ -432,8 +445,22 @@ void bme280_user_delay_ms(uint32_t milliseconds)
  *	@brief Function Pointer for reading data from the BME280 using the I2C protocol.
  * 	@param[in] dev_id : I2C address of the device.
  * 	@param[in] reg_addr : Register address of what we want to read in from the BME280.
- * 	@param[out] reg_data : Data we're reading out from the register.
+ * 	@param[out] reg_data : Data we're reading out from the register. SHOULD NOT BE CALLOCED YET.
  * 	@param[in] len : Length of the data we're reading out.
+ *
+ * 	Data readout is done by starting a burst read from 0xF7 to 0xFC (temperature and pressure)
+ * 	or from 0xF7 to 0xFE (temperature, pressure and humidity). The data are read out in an unsigned
+ * 	20-bit format both for pressure and for temperature and in an unsigned 16-bit format for humidity.
+ *  Addr - Reg Name		- Size
+ *	0xF7 - Pressure_MSB - 8 bits - Bits[19:12]
+ *	0xF8 - Pressure_LSB - 8 bits - Bits[11:4]
+ *	0xF9 - Pressure_XLSB - 8 bits - Bits[3:0]
+ *	0xFA - Temperature_MSB - 8 bits - Bits[19:12]
+ *	0xFB - Temperature_LSB - 8 bits - Bits[11:4]
+ *	0xFC - Temperature_XLSB - 8 bits - Bits[3:0]
+ *	0xFD - Humidity_MSB - 8 bits - Bits[15:8]
+ *	0xFE - Humidity_LSB - 8 bits - Bits[7:0]
+ *	See BME280 Datasheet Page 27 for more info
  */
 int8_t bme280_user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
 {
@@ -452,15 +479,15 @@ int8_t bme280_user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data,
 	 * | Stop       | -                   |
 	 * |------------+---------------------|
 	 */
-	//TODO: Is any of this correct
+	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
 	uint8_t write_mode = (dev_id < 1) | 0;
 	uint8_t read_mode = (dev_id < 1) | 1;
+	reg_data = calloc(8, sizeof(uint8_t));
 	// Transmit Write Mode
 	HAL_I2C_Master_Transmit(&hi2c1, write_mode, &reg_addr, len, I2C_TIMEOUT);
-	// Receive Control Byte from 0xF6
-	HAL_I2C_Master_Receive(&hi2c1, 0xF6, reg_data, len, I2C_TIMEOUT);
-	// TODO: Check Control Byte is 0xF6
+	// Transmit Read Mode
+	HAL_I2C_Master_Transmit(&hi2c1, read_mode, reg_data, len, I2C_TIMEOUT);
 	// Transmit Read Mode
 	HAL_I2C_Master_Transmit(&hi2c1, read_mode, &reg_addr, len, I2C_TIMEOUT);
 	// Receive Data from first Byte (0xF6)
