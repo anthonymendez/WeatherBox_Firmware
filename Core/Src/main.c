@@ -50,6 +50,8 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+int bme280_init_complete = 0;
+
 const int SPI_TIMEOUT = 500;
 const int I2C_TIMEOUT = 500;
 	/* BME280 Variables */
@@ -69,7 +71,7 @@ static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
-void BME280_INIT(void);
+static void BME280_INIT(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -94,14 +96,12 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -114,7 +114,9 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-
+  BME280_INIT();
+  bme280_init_complete = 1;
+  HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -292,7 +294,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 7000;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 3000;
+  htim2.Init.Period = 750;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -317,7 +319,6 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM2_Init 2 */
-  HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END TIM2_Init 2 */
 
 }
@@ -410,17 +411,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
 }
 
 /* USER CODE BEGIN 4 */
 /**
  * Initializes Bosch BME280 Temperature, Pressure, and Humidity Sensor
  */
-void BME280_INIT(void)
+static void BME280_INIT(void)
 {
 	/* Device Sampling, Filter, and Standby Time Settings */
 	/* Recommended mode of operation: Indoor navigation */
+	void *func = user_delay_ms;
 	bme280_device_settings.osr_p = BME280_OVERSAMPLING_16X;				// Pressure
 	bme280_device_settings.osr_t = BME280_OVERSAMPLING_2X;				// Temperature
 	bme280_device_settings.osr_h = BME280_OVERSAMPLING_1X;				// Humidity
@@ -428,9 +429,9 @@ void BME280_INIT(void)
 	bme280_device_settings.standby_time = 0;							// Standby Time
 	bme280_device.dev_id = BME280_I2C_ADDR_PRIM;						// I2C Address
 	bme280_device.intf = BME280_I2C_INTF;								// I2C Mode
-	bme280_device.read = bme280_user_i2c_read;							// Read Function Ptr
-	bme280_device.write = bme280_user_i2c_write;						// Write Function Ptr
-	bme280_device.delay_ms = bme280_user_delay_ms;						// Delay Function Ptr
+	bme280_device.read = user_i2c_read;							// Read Function Ptr
+	bme280_device.write = user_i2c_write;						// Write Function Ptr
+	bme280_device.delay_ms = user_delay_ms;						// Delay Function Ptr
 	bme280_device.settings = bme280_device_settings;					// Device Settings set above
 	bme280_rslt = bme280_init(&bme280_device);									// Result code of init
 }
@@ -440,7 +441,7 @@ void BME280_INIT(void)
  *	return control.
  * 	@param[in] milliseconds : How much to delay by in milliseconds.
  */
-void bme280_user_delay_ms(uint32_t milliseconds)
+void user_delay_ms(uint32_t milliseconds)
 {
 	//TODO: Verify if this is correct
 	HAL_Delay(milliseconds);
@@ -467,7 +468,7 @@ void bme280_user_delay_ms(uint32_t milliseconds)
  *	0xFE - Humidity_LSB - 8 bits - Bits[7:0]
  *	See BME280 Datasheet Page 27 for more info
  */
-int8_t bme280_user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
+int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
 {
 	/*
 	 * Data on the bus should be like
@@ -498,7 +499,7 @@ int8_t bme280_user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data,
  * 	@param[in] reg_data : Data we're writing to the register
  * 	@param[in] len : Length of the data we're reading out.
  */
-int8_t bme280_user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
+int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
 {
 	/*
 	 * Data on the bus should be like

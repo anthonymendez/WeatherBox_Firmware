@@ -84,7 +84,7 @@ void Read_ADC(uint8_t, uint16_t*);
 static uint16_t reverse(uint16_t);
 static float adc_to_voltage(uint16_t);
 static float calculate_wind_speed(uint16_t, uint16_t);
-void sensor_data_forced_mode(struct bme280_dev*);
+void bme280_read_data_forced_mode(struct bme280_dev*);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -98,6 +98,7 @@ extern TIM_HandleTypeDef htim2;
 extern SPI_HandleTypeDef hspi1;
 extern I2C_HandleTypeDef hi2c1;
 extern UART_HandleTypeDef huart2;
+extern int bme280_init_complete;
 extern struct bme280_settings bme280_device_settings;
 extern struct bme280_dev bme280_device;
 extern int8_t bme280_rslt;
@@ -116,7 +117,6 @@ extern struct bme280_data comp_data;
 void NMI_Handler(void)
 {
   /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
-
   /* USER CODE END NonMaskableInt_IRQn 0 */
   /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
 
@@ -171,7 +171,7 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-
+  HAL_IncTick();
   /* USER CODE END SysTick_IRQn 0 */
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
@@ -203,11 +203,16 @@ void TIM2_IRQHandler(void)
   uint8_t wifi_data1 = 0;
   uint8_t a = 'A';
   uint8_t t = 'T';
+  extern struct bme280_data comp_data;
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
   Toggle_User_LED();
+  if (bme280_init_complete == 0)
+  {
+	  return;
+  }
 
   /* Read ADC Wind Speed Sensor Channel */
   Read_ADC((uint8_t) ADC_WIND_SENSOR_SPEED_CH, &wind_speed_digital);
@@ -222,13 +227,12 @@ void TIM2_IRQHandler(void)
   Read_ADC((uint8_t) ADC_DIN_CH6, &din_ch6);
   Read_ADC((uint8_t) ADC_DIN_CH7, &din_ch7);
 
-
-
   HAL_UART_Transmit_IT(&huart2, &a, sizeof(uint16_t));
   HAL_UART_Transmit_IT(&huart2, &t, sizeof(uint16_t));
   HAL_UART_Receive_IT(&huart2, &wifi_data, sizeof(uint16_t));
   HAL_UART_Receive_IT(&huart2, &wifi_data1, sizeof(uint16_t));
 
+  bme280_read_data_forced_mode(&bme280_device);
 
   // TODO: Figure out how to communicate with the TPH sensor
 //  HAL_I2C_Master_Transmit_DMA(&hi2c1, (uint16_t)(TPH_OPEN_ADDRESS), &tph_data, sizeof(tph_data));
@@ -247,6 +251,7 @@ void TIM2_IRQHandler(void)
 
   /* Calculations Done Here */
   float wind_speed = calculate_wind_speed(wind_speed_digital, wind_temp_digital);
+  printf("%f", wind_speed);
   /* USER CODE END TIM2_IRQn 1 */
 }
 
@@ -378,7 +383,7 @@ static float calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_ad
 	return wind_speed;
 }
 
-void sensor_data_forced_mode(struct bme280_dev *dev)
+void bme280_read_data_forced_mode(struct bme280_dev *dev)
 {
 	/* Apply sensor settings */
 	bme280_rslt = bme280_set_sensor_settings(bme280_settings_sel, dev);
