@@ -52,9 +52,12 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 const int SPI_TIMEOUT = 500;
 const int I2C_TIMEOUT = 500;
+	/* BME280 Variables */
 struct bme280_settings bme280_device_settings;
 struct bme280_dev bme280_device;
-int8_t rslt = BME280_OK;
+int8_t bme280_rslt = BME280_OK;
+uint8_t bme280_settings_sel = BME280_OSR_PRESS_SEL | BME280_OSR_TEMP_SEL | BME280_OSR_HUM_SEL | BME280_FILTER_SEL;
+struct bme280_data comp_data;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -417,18 +420,19 @@ static void MX_GPIO_Init(void)
 void BME280_INIT(void)
 {
 	/* Device Sampling, Filter, and Standby Time Settings */
-	bme280_device_settings.osr_p = 0;				// Pressure
-	bme280_device_settings.osr_t = 0;				// Temperature
-	bme280_device_settings.osr_h = 0;				// Humidity
-	bme280_device_settings.filter = 0;				// Filter
-	bme280_device_settings.standby_time = 0;		// Standby Time
-	bme280_device.dev_id = BME280_I2C_ADDR_PRIM;	// I2C Address
-	bme280_device.intf = BME280_I2C_INTF;			// I2C Mode
-	bme280_device.read = bme280_user_i2c_read;		// Read Function Ptr
-	bme280_device.write = bme280_user_i2c_write;	// Write Function Ptr
-	bme280_device.delay_ms = bme280_user_delay_ms;	// Delay Function Ptr
-	bme280_device.settings = bme280_device_settings;// Device Settings set above
-	rslt = bme280_init(&bme280_device);				// Result code of init
+	/* Recommended mode of operation: Indoor navigation */
+	bme280_device_settings.osr_p = BME280_OVERSAMPLING_16X;				// Pressure
+	bme280_device_settings.osr_t = BME280_OVERSAMPLING_2X;				// Temperature
+	bme280_device_settings.osr_h = BME280_OVERSAMPLING_1X;				// Humidity
+	bme280_device_settings.filter = BME280_FILTER_COEFF_16;				// Filter
+	bme280_device_settings.standby_time = 0;							// Standby Time
+	bme280_device.dev_id = BME280_I2C_ADDR_PRIM;						// I2C Address
+	bme280_device.intf = BME280_I2C_INTF;								// I2C Mode
+	bme280_device.read = bme280_user_i2c_read;							// Read Function Ptr
+	bme280_device.write = bme280_user_i2c_write;						// Write Function Ptr
+	bme280_device.delay_ms = bme280_user_delay_ms;						// Delay Function Ptr
+	bme280_device.settings = bme280_device_settings;					// Device Settings set above
+	bme280_rslt = bme280_init(&bme280_device);									// Result code of init
 }
 /*
  *	@brief Function Pointer for Delaying the BME280.
@@ -438,7 +442,8 @@ void BME280_INIT(void)
  */
 void bme280_user_delay_ms(uint32_t milliseconds)
 {
-	//TODO: Fill in
+	//TODO: Verify if this is correct
+	HAL_Delay(milliseconds);
 }
 
 /*
@@ -481,19 +486,8 @@ int8_t bme280_user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data,
 	 */
 	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
-	uint8_t write_mode = (dev_id < 1) | 0;
 	uint8_t read_mode = (dev_id < 1) | 1;
-	reg_data = calloc(8, sizeof(uint8_t));
-	// Transmit Write Mode
-	HAL_I2C_Master_Transmit(&hi2c1, write_mode, &reg_addr, len, I2C_TIMEOUT);
-	// Transmit Read Mode
-	HAL_I2C_Master_Transmit(&hi2c1, read_mode, reg_data, len, I2C_TIMEOUT);
-	// Transmit Read Mode
-	HAL_I2C_Master_Transmit(&hi2c1, read_mode, &reg_addr, len, I2C_TIMEOUT);
-	// Receive Data from first Byte (0xF6)
-	HAL_I2C_Master_Receive(&hi2c1, 0xF6, reg_data, len, I2C_TIMEOUT);
-	// Receive Data from second Byte (0xF7)
-	HAL_I2C_Master_Receive(&hi2c1, 0xF7, reg_data, len, I2C_TIMEOUT);
+	rslt = HAL_I2C_Mem_Read(&hi2c1, read_mode, reg_addr, len, reg_data, len, I2C_TIMEOUT);
 	return rslt;
 }
 
@@ -501,7 +495,7 @@ int8_t bme280_user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data,
  *	@brief Function Pointer for writing data to the BME280 using the I2C protocol.
  * 	@param[in] dev_id : I2C address of the device.
  * 	@param[in] reg_addr : Register address of what we want to read in from the BME280.
- * 	@param[out] reg_data : Data we're reading out from the register.
+ * 	@param[in] reg_data : Data we're writing to the register
  * 	@param[in] len : Length of the data we're reading out.
  */
 int8_t bme280_user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
@@ -519,9 +513,10 @@ int8_t bme280_user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data
 	 * | Stop       | -                   |
 	 * |------------+---------------------|
 	 */
-
-	//TODO: Fill in
+	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
+	uint8_t write_mode = (dev_id < 1) | 0;
+	rslt = HAL_I2C_Mem_Write(&hi2c1, write_mode, reg_addr, len, reg_data, len, I2C_TIMEOUT);
 	return rslt;
 }
 /* USER CODE END 4 */

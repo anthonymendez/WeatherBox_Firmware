@@ -84,6 +84,7 @@ void Read_ADC(uint8_t, uint16_t*);
 static uint16_t reverse(uint16_t);
 static float adc_to_voltage(uint16_t);
 static float calculate_wind_speed(uint16_t, uint16_t);
+void sensor_data_forced_mode(struct bme280_dev*);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -97,9 +98,13 @@ extern TIM_HandleTypeDef htim2;
 extern SPI_HandleTypeDef hspi1;
 extern I2C_HandleTypeDef hi2c1;
 extern UART_HandleTypeDef huart2;
-
+extern struct bme280_settings bme280_device_settings;
+extern struct bme280_dev bme280_device;
+extern int8_t bme280_rslt;
+extern uint8_t bme280_settings_sel;
 extern const int SPI_TIMEOUT;
 extern const int I2C_TIMEOUT;
+extern struct bme280_data comp_data;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -194,7 +199,6 @@ void TIM2_IRQHandler(void)
   uint16_t din_ch5 = 0;
   uint16_t din_ch6 = 0;
   uint16_t din_ch7 = 0;
-  uint16_t tph_data = 0;
   uint8_t wifi_data = 0;
   uint8_t wifi_data1 = 0;
   uint8_t a = 'A';
@@ -217,6 +221,8 @@ void TIM2_IRQHandler(void)
   Read_ADC((uint8_t) ADC_DIN_CH5, &din_ch5);
   Read_ADC((uint8_t) ADC_DIN_CH6, &din_ch6);
   Read_ADC((uint8_t) ADC_DIN_CH7, &din_ch7);
+
+
 
   HAL_UART_Transmit_IT(&huart2, &a, sizeof(uint16_t));
   HAL_UART_Transmit_IT(&huart2, &t, sizeof(uint16_t));
@@ -370,6 +376,19 @@ static float calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_ad
 	wind_speed /= 0.087288;
 	wind_speed = pow(wind_speed, 3.009364);
 	return wind_speed;
+}
+
+void sensor_data_forced_mode(struct bme280_dev *dev)
+{
+	/* Apply sensor settings */
+	bme280_rslt = bme280_set_sensor_settings(bme280_settings_sel, dev);
+	/* Set measurement mode to Forced */
+	bme280_rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, dev);
+	/* Wait for the measurement to complete */
+	dev->delay_ms(40);
+	/* Output data to comp_data */
+	bme280_rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, dev);
+    }
 }
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

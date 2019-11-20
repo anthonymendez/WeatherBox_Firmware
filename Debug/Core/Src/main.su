@@ -8,6 +8,6 @@ main.c:327:13:MX_USART2_UART_Init	8	static
 main.c:362:13:MX_GPIO_Init	56	static
 main.c:417:6:BME280_INIT	8	static
 main.c:439:6:bme280_user_delay_ms	16	static
-main.c:465:8:bme280_user_i2c_read	48	static
-main.c:507:8:bme280_user_i2c_write	32	static
-main.c:533:6:Error_Handler	8	static
+main.c:466:8:bme280_user_i2c_read	56	static
+main.c:497:8:bme280_user_i2c_write	56	static
+main.c:524:6:Error_Handler	8	static
