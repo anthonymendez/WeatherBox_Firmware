@@ -54,9 +54,9 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-void bme280_user_delay_ms(uint32_t);
-int8_t bme280_user_i2c_read(uint8_t, uint8_t, uint8_t*, uint16_t);
-int8_t bme280_user_i2c_write(uint8_t, uint8_t, uint8_t*, uint16_t);
+void user_delay_ms(uint32_t);
+int8_t user_i2c_read(uint8_t, uint8_t, uint8_t*, uint16_t);
+int8_t user_i2c_write(uint8_t, uint8_t, uint8_t*, uint16_t);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
