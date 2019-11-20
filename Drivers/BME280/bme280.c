@@ -770,7 +770,7 @@ int8_t bme280_compensate_data(uint8_t sensor_comp,
         if (sensor_comp & BME280_HUM)
         {
             /* Compensate the humidity data */
-            comp_da ta->humidity = compensate_humidity(uncomp_data, calib_data);
+            comp_data->humidity = compensate_humidity(uncomp_data, calib_data);
         }
     }
     else

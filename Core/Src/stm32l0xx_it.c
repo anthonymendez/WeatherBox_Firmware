@@ -388,7 +388,6 @@ void sensor_data_forced_mode(struct bme280_dev *dev)
 	dev->delay_ms(40);
 	/* Output data to comp_data */
 	bme280_rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, dev);
-    }
 }
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
