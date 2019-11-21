@@ -422,19 +422,18 @@ static void BME280_INIT(void)
 {
 	/* Device Sampling, Filter, and Standby Time Settings */
 	/* Recommended mode of operation: Indoor navigation */
-	void *func = user_delay_ms;
-	bme280_device_settings.osr_p = BME280_OVERSAMPLING_16X;				// Pressure
-	bme280_device_settings.osr_t = BME280_OVERSAMPLING_2X;				// Temperature
-	bme280_device_settings.osr_h = BME280_OVERSAMPLING_1X;				// Humidity
-	bme280_device_settings.filter = BME280_FILTER_COEFF_16;				// Filter
-	bme280_device_settings.standby_time = 0;							// Standby Time
-	bme280_device.dev_id = BME280_I2C_ADDR_PRIM;						// I2C Address
-	bme280_device.intf = BME280_I2C_INTF;								// I2C Mode
+	bme280_device_settings.osr_p = BME280_OVERSAMPLING_16X;		// Pressure
+	bme280_device_settings.osr_t = BME280_OVERSAMPLING_2X;		// Temperature
+	bme280_device_settings.osr_h = BME280_OVERSAMPLING_1X;		// Humidity
+	bme280_device_settings.filter = BME280_FILTER_COEFF_16;		// Filter
+	bme280_device_settings.standby_time = 0;					// Standby Time
+	bme280_device.dev_id = BME280_I2C_ADDR_SEC;					// I2C Address
+	bme280_device.intf = BME280_I2C_INTF;						// I2C Mode
 	bme280_device.read = user_i2c_read;							// Read Function Ptr
 	bme280_device.write = user_i2c_write;						// Write Function Ptr
 	bme280_device.delay_ms = user_delay_ms;						// Delay Function Ptr
-	bme280_device.settings = bme280_device_settings;					// Device Settings set above
-	bme280_rslt = bme280_init(&bme280_device);									// Result code of init
+	bme280_device.settings = bme280_device_settings;			// Device Settings set above
+	bme280_rslt = bme280_init(&bme280_device);					// Result code of init
 }
 /*
  *	@brief Function Pointer for Delaying the BME280.
@@ -488,9 +487,8 @@ int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16
 	 */
 	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
-	uint16_t read_mode = (dev_id << 9) | (1 << 8) | reg_addr;
-	user_i2c_write(dev_id, reg_addr, reg_data, len);
-	rslt = HAL_I2C_Master_Receive(&hi2c1, read_mode, reg_data, len, I2C_TIMEOUT);
+	uint16_t read_mode = (dev_id << 1) | 1;
+	rslt = HAL_I2C_Mem_Read(&hi2c1, read_mode, reg_addr, len, reg_data, len, I2C_TIMEOUT);
 	return rslt;
 }
 
@@ -519,8 +517,7 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
 	uint16_t write_mode = (dev_id << 1) | 0;
-	rslt = HAL_I2C_Master_Transmit(&hi2c1, write_mode, reg_data, len, I2C_TIMEOUT);
-	rslt = HAL_I2C_Master_Transmit(&hi2c1, reg_addr, reg_data, len, I2C_TIMEOUT);
+	rslt = HAL_I2C_Mem_Write(&hi2c1, write_mode, reg_addr, len, reg_data, len, I2C_TIMEOUT);
 	return rslt;
 }
 /* USER CODE END 4 */
