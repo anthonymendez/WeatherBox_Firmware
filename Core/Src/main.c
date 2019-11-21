@@ -57,6 +57,7 @@ const int I2C_TIMEOUT = 500;
 	/* BME280 Variables */
 struct bme280_settings bme280_device_settings;
 struct bme280_dev bme280_device;
+int8_t bme280_init_rslt = BME280_OK;
 int8_t bme280_rslt = BME280_OK;
 uint8_t bme280_settings_sel = BME280_OSR_PRESS_SEL | BME280_OSR_TEMP_SEL | BME280_OSR_HUM_SEL | BME280_FILTER_SEL;
 struct bme280_data comp_data;
@@ -433,7 +434,9 @@ static void BME280_INIT(void)
 	bme280_device.write = user_i2c_write;						// Write Function Ptr
 	bme280_device.delay_ms = user_delay_ms;						// Delay Function Ptr
 	bme280_device.settings = bme280_device_settings;			// Device Settings set above
-	bme280_rslt = bme280_init(&bme280_device);					// Result code of init
+	bme280_init_rslt |= bme280_init(&bme280_device);					// Initizialize Device
+	bme280_init_rslt |= bme280_set_sensor_settings(bme280_settings_sel, &bme280_device); // Apply Settings
+	bme280_init_rslt |= bme280_set_sensor_mode(BME280_SLEEP_MODE, &bme280_device); // Set to sleep mode
 }
 /*
  *	@brief Function Pointer for Delaying the BME280.
@@ -443,7 +446,6 @@ static void BME280_INIT(void)
  */
 void user_delay_ms(uint32_t milliseconds)
 {
-	//TODO: Verify if this is correct
 	HAL_Delay(milliseconds);
 }
 
@@ -487,8 +489,15 @@ int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16
 	 */
 	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
-	uint16_t read_mode = (dev_id << 1) | 1;
-	rslt = HAL_I2C_Mem_Read(&hi2c1, read_mode, reg_addr, len, reg_data, len, I2C_TIMEOUT);
+	uint16_t read_mode = dev_id;
+	/* Check if our dev_id is already left shifted with a read bit */
+	if (dev_id == (uint8_t)(BME280_I2C_ADDR_PRIM) || dev_id == (uint8_t)(BME280_I2C_ADDR_SEC))
+	{
+		read_mode = (dev_id << 1) | 1;
+	}
+	HAL_I2C_Init(&hi2c1);
+	rslt |= HAL_I2C_Mem_Read(&hi2c1, read_mode, reg_addr, sizeof(uint8_t), reg_data, len, I2C_TIMEOUT);
+	HAL_I2C_DeInit(&hi2c1);
 	return rslt;
 }
 
@@ -516,8 +525,15 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 	 */
 	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
-	uint16_t write_mode = (dev_id << 1) | 0;
-	rslt = HAL_I2C_Mem_Write(&hi2c1, write_mode, reg_addr, len, reg_data, len, I2C_TIMEOUT);
+	uint16_t write_mode = dev_id;
+	/* Check if our dev_id is already left shifted with a write bit */
+	if (dev_id == (uint8_t)(BME280_I2C_ADDR_PRIM) || dev_id == (uint8_t)(BME280_I2C_ADDR_SEC))
+	{
+		write_mode = (dev_id << 1) | 0;
+	}
+	HAL_I2C_Init(&hi2c1);
+	rslt = HAL_I2C_Mem_Write(&hi2c1, write_mode, reg_addr, sizeof(uint8_t), reg_data, len, I2C_TIMEOUT);
+	HAL_I2C_DeInit(&hi2c1);
 	return rslt;
 }
 /* USER CODE END 4 */

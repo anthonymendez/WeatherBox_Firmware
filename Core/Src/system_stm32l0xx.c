@@ -150,7 +150,7 @@ void SystemInit (void)
   RCC->CR &= (uint32_t)0xFFFBFFFFU;
 
   /*!< Reset PLLSRC, PLLMUL[3:0] and PLLDIV[1:0] bits */
-  RCC->CFGR &= (uint32_t)0xFF02FFFFU;
+ RCC->CFGR &= (uint32_t)0xFF02FFFFU;
 
   /*!< Disable all interrupts */
   RCC->CIER = 0x00000000U;

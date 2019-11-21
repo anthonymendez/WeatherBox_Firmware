@@ -102,6 +102,7 @@ extern int bme280_init_complete;
 extern struct bme280_settings bme280_device_settings;
 extern struct bme280_dev bme280_device;
 extern int8_t bme280_rslt;
+extern int8_t bme280_init_rslt;
 extern uint8_t bme280_settings_sel;
 extern const int SPI_TIMEOUT;
 extern const int I2C_TIMEOUT;
@@ -203,7 +204,6 @@ void TIM2_IRQHandler(void)
   uint8_t wifi_data1 = 0;
   uint8_t a = 'A';
   uint8_t t = 'T';
-  extern struct bme280_data comp_data;
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -227,12 +227,12 @@ void TIM2_IRQHandler(void)
   Read_ADC((uint8_t) ADC_DIN_CH6, &din_ch6);
   Read_ADC((uint8_t) ADC_DIN_CH7, &din_ch7);
 
+  bme280_read_data_forced_mode(&bme280_device);
+
   HAL_UART_Transmit_IT(&huart2, &a, sizeof(uint16_t));
   HAL_UART_Transmit_IT(&huart2, &t, sizeof(uint16_t));
   HAL_UART_Receive_IT(&huart2, &wifi_data, sizeof(uint16_t));
   HAL_UART_Receive_IT(&huart2, &wifi_data1, sizeof(uint16_t));
-
-  bme280_read_data_forced_mode(&bme280_device);
 
   // TODO: Figure out how to communicate with the TPH sensor
 //  HAL_I2C_Master_Transmit_DMA(&hi2c1, (uint16_t)(TPH_OPEN_ADDRESS), &tph_data, sizeof(tph_data));
@@ -251,7 +251,6 @@ void TIM2_IRQHandler(void)
 
   /* Calculations Done Here */
   float wind_speed = calculate_wind_speed(wind_speed_digital, wind_temp_digital);
-  printf("%f", wind_speed);
   /* USER CODE END TIM2_IRQn 1 */
 }
 
@@ -385,14 +384,15 @@ static float calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_ad
 
 void bme280_read_data_forced_mode(struct bme280_dev *dev)
 {
-	/* Apply sensor settings */
-	bme280_rslt = bme280_set_sensor_settings(bme280_settings_sel, dev);
+	bme280_rslt = 0;
 	/* Set measurement mode to Forced */
-	bme280_rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, dev);
+	bme280_rslt |= bme280_set_sensor_mode(BME280_FORCED_MODE, dev);
 	/* Wait for the measurement to complete */
-	dev->delay_ms(40);
+	dev->delay_ms(500);
 	/* Output data to comp_data */
-	bme280_rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, dev);
+	bme280_rslt |= bme280_get_sensor_data(BME280_ALL, &comp_data, dev);
+	/* Set sensor to Sleep */
+	bme280_rslt |= bme280_set_sensor_mode(BME280_SLEEP_MODE, dev);
 }
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
