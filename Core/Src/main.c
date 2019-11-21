@@ -454,7 +454,7 @@ void user_delay_ms(uint32_t milliseconds)
  * 	@param[in] dev_id : I2C address of the device.
  * 	@param[in] reg_addr : Register address of what we want to read in from the BME280.
  * 	@param[out] reg_data : Data we're reading out from the register. SHOULD NOT BE CALLOCED YET.
- * 	@param[in] len : Length of the data we're reading out.
+ * 	@param[in] len : Amount of registers to read from
  *
  * 	Data readout is done by starting a burst read from 0xF7 to 0xFC (temperature and pressure)
  * 	or from 0xF7 to 0xFE (temperature, pressure and humidity). The data are read out in an unsigned
@@ -495,6 +495,7 @@ int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16
 	{
 		read_mode = (dev_id << 1) | 1;
 	}
+	// Initing then Deiniting fixed I2C Busy Flag bug
 	HAL_I2C_Init(&hi2c1);
 	rslt |= HAL_I2C_Mem_Read(&hi2c1, read_mode, reg_addr, sizeof(uint8_t), reg_data, len, I2C_TIMEOUT);
 	HAL_I2C_DeInit(&hi2c1);
@@ -506,7 +507,7 @@ int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16
  * 	@param[in] dev_id : I2C address of the device.
  * 	@param[in] reg_addr : Register address of what we want to read in from the BME280.
  * 	@param[in] reg_data : Data we're writing to the register
- * 	@param[in] len : Length of the data we're reading out.
+ * 	@param[in] len : Amount of registers to write to
  */
 int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
 {
@@ -531,6 +532,7 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 	{
 		write_mode = (dev_id << 1) | 0;
 	}
+	// Initing then Deiniting fixed I2C Busy Flag bug
 	HAL_I2C_Init(&hi2c1);
 	rslt = HAL_I2C_Mem_Write(&hi2c1, write_mode, reg_addr, sizeof(uint8_t), reg_data, len, I2C_TIMEOUT);
 	HAL_I2C_DeInit(&hi2c1);

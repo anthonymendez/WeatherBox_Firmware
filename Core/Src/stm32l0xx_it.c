@@ -83,7 +83,7 @@ void HAL_SPI_Transmit_Start();
 void Read_ADC(uint8_t, uint16_t*);
 static uint16_t reverse(uint16_t);
 static float adc_to_voltage(uint16_t);
-static float calculate_wind_speed(uint16_t, uint16_t);
+static void calculate_wind_speed(uint16_t, uint16_t, float*, float*);
 void bme280_read_data_forced_mode(struct bme280_dev*);
 /* USER CODE END PFP */
 
@@ -204,6 +204,11 @@ void TIM2_IRQHandler(void)
   uint8_t wifi_data1 = 0;
   uint8_t a = 'A';
   uint8_t t = 'T';
+  float bme280_pressure = 0;
+  float bme280_temperature = 0;
+  float bme280_humidity = 0;
+  float md_wind_speed = 0;
+  float md_temp = 0;
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -227,15 +232,21 @@ void TIM2_IRQHandler(void)
   Read_ADC((uint8_t) ADC_DIN_CH6, &din_ch6);
   Read_ADC((uint8_t) ADC_DIN_CH7, &din_ch7);
 
+  /* Data is output to comp_data */
   bme280_read_data_forced_mode(&bme280_device);
 
+  /* Calculations Done Here */
+  // TODO: Double check later if this is properly compensated
+  calculate_wind_speed(wind_speed_digital, wind_temp_digital, &md_wind_speed, &md_temp);
+  bme280_temperature = comp_data.temperature * 0.01; // Celsius
+  bme280_humidity = comp_data.humidity / 1024.0; // Output is in percentage... so 43.33 is 43.33 %rH
+  bme280_pressure = comp_data.pressure * 0.01; // hPa Pressure Units... for Debug Purposes
+
+  /* Transmit over WiFi */
   HAL_UART_Transmit_IT(&huart2, &a, sizeof(uint16_t));
   HAL_UART_Transmit_IT(&huart2, &t, sizeof(uint16_t));
   HAL_UART_Receive_IT(&huart2, &wifi_data, sizeof(uint16_t));
   HAL_UART_Receive_IT(&huart2, &wifi_data1, sizeof(uint16_t));
-
-  // TODO: Figure out how to communicate with the TPH sensor
-//  HAL_I2C_Master_Transmit_DMA(&hi2c1, (uint16_t)(TPH_OPEN_ADDRESS), &tph_data, sizeof(tph_data));
 
 //  /* Toggle SS1 Pin Low to select sensor */
 //  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
@@ -249,8 +260,6 @@ void TIM2_IRQHandler(void)
 //  HAL_GPIO_TogglePin(SS2_GPIO_Port, SS2_Pin);
 //  /* Toggle SS2 High to un-select sensor */
 
-  /* Calculations Done Here */
-  float wind_speed = calculate_wind_speed(wind_speed_digital, wind_temp_digital);
   /* USER CODE END TIM2_IRQn 1 */
 }
 
@@ -359,7 +368,7 @@ static float adc_to_voltage(uint16_t adc_value)
  *	TODO: Use the Bosch sensor for ambiant temperature instead of the onboard Modern Device Sensor
  * 	https://moderndevice.com/uncategorized/calibrating-rev-p-wind-sensor-new-regression/?preview=true
  */
-static float calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_adc)
+static void calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_adc, float *wind_speed, float *temp_amb)
 {
 	// Calculate Vin from ADC
 	float wind_speed_vout = adc_to_voltage(wind_speed_adc);
@@ -372,14 +381,12 @@ static float calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_ad
 	}
 
 	// Calculate Ambient Temperature in Celsius
-	float TempAmb = (wind_temp_vout - 0.400) / 0.0195;
-	float zero = zero_voltage;
+	*temp_amb = (wind_temp_vout - 0.400) / 0.0195;
 
 	// Calculate the Wind Speed in MPH
-	float wind_speed = (wind_speed_vout - zero_voltage) / (3.038517 * pow(TempAmb, 0.115157));
-	wind_speed /= 0.087288;
-	wind_speed = pow(wind_speed, 3.009364);
-	return wind_speed;
+	*wind_speed = (wind_speed_vout - zero_voltage) / (3.038517 * pow(*temp_amb, 0.115157));
+	*wind_speed /= 0.087288;
+	*wind_speed = pow(*wind_speed, 3.009364);
 }
 
 void bme280_read_data_forced_mode(struct bme280_dev *dev)
