@@ -9,5 +9,5 @@ main.c:367:13:MX_GPIO_Init	56	static
 main.c:422:13:BME280_INIT	8	static
 main.c:447:6:user_delay_ms	16	static
 main.c:473:8:user_i2c_read	48	static
-main.c:511:8:user_i2c_write	48	static
-main.c:545:6:Error_Handler	8	static
+main.c:512:8:user_i2c_write	48	static
+main.c:547:6:Error_Handler	8	static

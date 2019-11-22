@@ -200,10 +200,8 @@ void TIM2_IRQHandler(void)
   uint16_t din_ch5 = 0;
   uint16_t din_ch6 = 0;
   uint16_t din_ch7 = 0;
-  uint8_t wifi_data = 0;
-  uint8_t wifi_data1 = 0;
-  uint8_t a = 'A';
-  uint8_t t = 'T';
+  char wifi_data1[2];
+  char UARTsend[] = "AT\n";
   float bme280_pressure = 0;
   float bme280_temperature = 0;
   float bme280_humidity = 0;
@@ -243,13 +241,11 @@ void TIM2_IRQHandler(void)
   bme280_pressure = comp_data.pressure * 0.01; // hPa Pressure Units... for Debug Purposes
 
   /* Transmit over WiFi */
-  HAL_UART_Transmit_IT(&huart2, &a, sizeof(uint16_t));
-  HAL_UART_Transmit_IT(&huart2, &t, sizeof(uint16_t));
-  HAL_UART_Receive_IT(&huart2, &wifi_data, sizeof(uint16_t));
-  HAL_UART_Receive_IT(&huart2, &wifi_data1, sizeof(uint16_t));
+  HAL_UART_Transmit(&huart2, (uint8_t *) UARTsend, strlen(UARTsend), 500);
+  HAL_UART_Receive(&huart2, (uint8_t *)wifi_data1, 2, 500);
 
 //  /* Toggle SS1 Pin Low to select sensor */
-//  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
+    HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
 //  // TODO: Read from Sensor
 //  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
 //  /* Toggle SS1 High to un-select sensor */
