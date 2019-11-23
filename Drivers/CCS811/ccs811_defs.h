@@ -8,6 +8,16 @@
 #ifndef CCS811_CCS811_DEFS_H_
 #define CCS811_CCS811_DEFS_H_
 
+/********************************************************/
+/* header includes */
+#ifdef __KERNEL__
+#include <linux/types.h>
+#include <linux/kernel.h>
+#else
+#include <stdint.h>
+#include <stddef.h>
+#endif
+
 /**\name CCS811 Hardware Identifier */
 #define CCS811_HW_ID			UINT8_C(0x81)
 
@@ -56,11 +66,11 @@
 #define CCS811_SW_RESET_BYTE_LEN             UINT8_C(0x04)
 
 /**\name Sensor Operation Modes */
-#define CCS811_IDLE_MODE                 UINT8_C(0x00)
-#define CCS811_CONSTANT_1s_MODE          UINT8_C(0x01)
-#define CCS811_PULSE_10s_MODE            UINT8_C(0x02)
-#define CCS811_LP_PULSE_60s_MODE         UINT8_C(0x03)
-#define CCS811_CONSTANT_250ms_MODE       UINT8_C(0x04)
+#define CCS811_DRIVE_MODE_IDLE_MODE                 UINT8_C(0x00)
+#define CCS811_DRIVE_MODE_CONSTANT_1s_MODE          UINT8_C(0x10)
+#define CCS811_DRIVE_MODE_PULSE_10s_MODE            UINT8_C(0x20)
+#define CCS811_DRIVE_MODE_LP_PULSE_60s_MODE         UINT8_C(0x30)
+#define CCS811_DRIVE_MODE_CONSTANT_250ms_MODE       UINT8_C(0x40)
 
 /**\name Macros for bit masking registers */
 #define CCS811_STATUS_FW_MODE_MSK		UINT8_C(0x80)
@@ -186,5 +196,69 @@
 #define CCS811_SW_RESET_RESET_DEFAULT_VALUE_BYTE_3	UINT8_C(0x8A)
 
 #define CCS811_APP_START_BOOT_TO_RUN_DEFAULT_VALUE	UINT8_C(0xF4)
+
+/*!
+ * @brief Interface selection Enums
+ */
+enum ccs811_drive_mode {
+    /*! Idle (No measurements) */
+    IDLE,
+
+    /*! Constant Power Mode (Measurement every second) */
+    CONSTANT_1S,
+
+	/*! Pulse Heating Mode (Measurement every 10 seconds) */
+	PULSE_10S,
+
+	/*! Low Power Pulse Heating Mode (Measurement every 60 seconds) */
+	PULSE_60S,
+
+	/*! Constant Power Mode (Measurement every 250 milliseconds) */
+	CONSTANT_250MS
+};
+
+/*!
+ *	@brief Algorithm Result Data Struct
+ */
+struct ccs811_measurement_data {
+	uint16_t eco2;
+	uint16_t tvoc;
+	uint8_t status;
+	uint8_t error_id;
+	uint16_t raw_data;
+};
+
+/*!
+ *	@brief Threshold Data Struct
+ */
+struct ccs811_threshold_reg {
+	uint16_t thresh_low;
+	uint16_t thresh_high;
+	uint8_t thresh_hyst;
+};
+
+/*!
+ *	@brief CCS811 Device Struct
+ */
+struct ccs811_dev{
+	/*! Hardware ID */
+	uint8_t hw_id;
+
+	/*! Measure Mode Reg */
+	uint8_t measure_mode_reg;
+
+	/*! Error Reg */
+	uint8_t error_reg;
+
+	/*! Drive Mode Enum */
+	enum ccs811_drive_mode drive_mode;
+
+	/*! Measurement Data */
+	struct ccs811_measurement_data measurement_data;
+
+	/*! Threshold */
+	struct ccs811_threshold_reg threshold_reg;
+
+};
 
 #endif /* CCS811_CCS811_DEFS_H_ */
