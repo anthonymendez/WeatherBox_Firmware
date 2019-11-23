@@ -255,6 +255,11 @@ enum ccs811_drive_mode {
 
 /*!
  *	@brief Algorithm Result Data Struct
+ *	eco2 - Bytes 0:1
+ *	TVOC - Bytes 2:3
+ *	Status - Byte 4
+ *	ERROR ID - Byte 5
+ *	Raw Data - Byte 6:7
  */
 struct ccs811_measurement_data {
 	uint16_t eco2;
@@ -266,6 +271,9 @@ struct ccs811_measurement_data {
 
 /*!
  *	@brief Threshold Data Struct
+ *	Low Threshold - Bytes 0:1
+ *	High Threshold - Bytes 2:3
+ *	Hysteresis - Byte 4
  */
 struct ccs811_threshold_reg {
 	uint16_t thresh_low;
@@ -294,7 +302,6 @@ struct ccs811_dev{
 
 	/*! Threshold */
 	struct ccs811_threshold_reg threshold_reg;
-
 };
 
 #endif /* CCS811_CCS811_DEFS_H_ */
