@@ -18,6 +18,42 @@
 #include <stddef.h>
 #endif
 
+/********************************************************/
+/*! @name       Common macros               */
+/********************************************************/
+
+#if !defined(UINT8_C) && !defined(INT8_C)
+#define INT8_C(x)   S8_C(x)
+#define UINT8_C(x)  U8_C(x)
+#endif
+
+#if !defined(UINT16_C) && !defined(INT16_C)
+#define INT16_C(x)  S16_C(x)
+#define UINT16_C(x) U16_C(x)
+#endif
+
+#if !defined(INT32_C) && !defined(UINT32_C)
+#define INT32_C(x)  S32_C(x)
+#define UINT32_C(x) U32_C(x)
+#endif
+
+#if !defined(INT64_C) && !defined(UINT64_C)
+#define INT64_C(x)  S64_C(x)
+#define UINT64_C(x) U64_C(x)
+#endif
+
+/**@}*/
+/**\name C standard macros */
+#ifndef NULL
+#ifdef __cplusplus
+#define NULL 0
+#else
+#define NULL ((void *) 0)
+#endif
+#endif
+
+/********************************************************/
+
 /**\name CCS811 Hardware Identifier */
 #define CCS811_HW_ID			UINT8_C(0x81)
 
