@@ -254,6 +254,12 @@ enum ccs811_drive_mode {
 };
 
 /*!
+ *	@brief Type definitions
+ */
+typedef uint8_t (*ccs811_com_fptr_t)(uint8_t ccs811_slave_address, uint8_t reg_addr, uint8_t *data, uint16_t data_len);
+typedef void (*ccs811_delay_fptr_t)(uint32_t period);
+
+/*!
  *	@brief Algorithm Result Data Struct
  *	eco2 - Bytes 0:1
  *	TVOC - Bytes 2:3
@@ -282,11 +288,72 @@ struct ccs811_threshold_reg {
 };
 
 /*!
+ *	@brief Raw Data Struct
+ *	Current - Byte 0, [7:2]
+ *	ADC - Byte 0 [1:0], Byte 1 [7:0]
+ */
+struct ccs811_raw_data {
+	uint8_t current_through_sensor;
+	uint16_t raw_adc_reading;
+};
+
+/*!
+ *	@brief Environmental Data Struct
+ *	Humidity Percent - Byte 0 [7:2]
+ *	Humidity Fraction - Byte 0 [1:0], Byte 1 [7:0]
+ *	Temperature 25*C - Byte 2 [7:2]
+ *	Temperature 25*C Fraction - Byte 2 [1:0], Byte 3 [7:0]
+ */
+struct ccs811_env_data {
+	uint8_t humidity_perc;
+	uint16_t humidity_frac;
+	uint8_t temperature_perc;
+	uint16_t temperature_frac;
+};
+
+/*!
+ * 	@brief NTC Data Register Struct
+ *	v_ref_mv - Voltage across R_ref in mV
+ *	v_ntc_mv - Voltage across R_ntc in mV
+ */
+struct ccs811_ntc {
+	uint16_t v_ref_mv;
+	uint16_t v_ntc_mv;
+};
+
+/*!
+ *	@brief Firmware Boot Version Struct
+ *	major - Byte 0 [7:4]
+ *	minor - Byte 0 [3:0]
+ *	trivial - Byte 1 [7:0]
+ */
+struct ccs811_fw_boot_version {
+	uint8_t major;
+	uint8_t minor;
+	uint8_t trivial;
+};
+
+/*!
+ *	@brief Firmware App Version Struct
+ *	major - Byte 0 [7:4]
+ *	minor - Byte 0 [3:0]
+ *	trivial - Byte 1 [7:0]
+ */
+struct ccs811_fw_app_version {
+	uint8_t major;
+	uint8_t minor;
+	uint8_t trivial;
+};
+
+/*!
  *	@brief CCS811 Device Struct
  */
 struct ccs811_dev{
 	/*! Hardware ID */
 	uint8_t hw_id;
+
+	/*! Status Reg */
+	uint8_t status_reg;
 
 	/*! Measure Mode Reg */
 	uint8_t measure_mode_reg;
@@ -294,14 +361,17 @@ struct ccs811_dev{
 	/*! Error Reg */
 	uint8_t error_reg;
 
+	/*! Read function pointer */
+	ccs811_com_fptr_t read;
+
+	/*! Write function pointer */
+	ccs811_com_fptr_t write;
+
+	/*! Delay function pointer */
+	ccs811_delay_fptr_t delay_ms;
+
 	/*! Drive Mode Enum */
 	enum ccs811_drive_mode drive_mode;
-
-	/*! Measurement Data */
-	struct ccs811_measurement_data measurement_data;
-
-	/*! Threshold */
-	struct ccs811_threshold_reg threshold_reg;
 };
 
 #endif /* CCS811_CCS811_DEFS_H_ */
