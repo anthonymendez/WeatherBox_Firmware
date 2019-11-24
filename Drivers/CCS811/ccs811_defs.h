@@ -61,6 +61,17 @@
 #define CCS811_I2C_ADDR_PRIM    UINT8_C(0x5A)
 #define CCS811_I2C_ADDR_SEC     UINT8_C(0x5B)
 
+/**\name API success code */
+#define CCS811_OK                         INT8_C(0)
+
+/**\name API error codes */
+#define CCS811_E_NULL_PTR                 INT8_C(-1)
+#define CCS811_E_DEV_NOT_FOUND            INT8_C(-2)
+#define CCS811_E_INVALID_LEN              INT8_C(-3)
+#define CCS811_E_COMM_FAIL                INT8_C(-4)
+#define CCS811_E_SLEEP_MODE_FAIL          INT8_C(-5)
+#define CCS811_E_NVM_COPY_FAILED          INT8_C(-6)
+
 /**\name Register Address */
 #define CCS811_STATUS_ADDR               UINT8_C(0x00)
 #define CCS811_MEAS_MODE_ADDR            UINT8_C(0x01)
@@ -351,6 +362,9 @@ struct ccs811_fw_app_version {
 struct ccs811_dev{
 	/*! Hardware ID */
 	uint8_t hw_id;
+
+	/*! Device Address */
+	uint8_t dev_addr;
 
 	/*! Status Reg */
 	uint8_t status_reg;

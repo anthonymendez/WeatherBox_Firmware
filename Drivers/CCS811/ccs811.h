@@ -82,10 +82,11 @@ int8_t ccs811_read_meas_mode_reg(struct ccs811_dev *dev);
  *	@return Result of API execution status.
  *	@retval zero -> Success / + value -> Warning / - value -> Error
  */
-int8_t ccs811_set_meas_mode_reg(uint8_t meas_mode, struct ccs811_dev *dev);
+int8_t ccs811_set_meas_mode_reg(struct ccs811_dev *dev);
 
 /*!
  *	@brief This API reads from the algorithm result data.
+ *
  *	@param[out] meas_data : Structure instance of algorithm result
  *	@param[in] dev : Structure instance of ccs811_dev
  *
@@ -163,13 +164,12 @@ int8_t ccs811_set_baseline_reg(uint16_t *baseline, struct ccs811_dev *dev);
 /*!
  *	@brief This API reads from the Hardware ID register.
  *
- *	@param[out] hw_id : Hardware ID.
- *	@param[in] dev : Structure instance of ccs811_dev
+ *	@param[in,out] dev : Structure instance of ccs811_dev
  *
  *	@return Result of API execution status.
  *	@retval zero -> Success / + value -> Warning / - value -> Error
  */
-int8_t ccs811_read_hw_id(uint8_t hw_id, struct ccs811_dev *dev);
+int8_t ccs811_read_hw_id(struct ccs811_dev *dev);
 
 /*!
  *	@brief This API reads from the Hardware Version register.
@@ -245,5 +245,16 @@ int8_t ccs811_perform_app_erase(struct ccs811_dev *dev);
  *	@retval zero -> Success / + value -> Warning / - value -> Error
  */
 int8_t ccs811_set_app_data(struct ccs811_dev *dev);
+
+/*!
+ * 	@brief This API transitions the sensor from boot mode to application mode,
+ * 	by writing to the APP_Start register.
+ *
+ * 	@param[in] dev : Structure instance of ccs811_dev
+ *
+ * 	@return Result of API execution status
+ *	@retval zero -> Success / + value -> Warning / - value -> Error
+ */
+int8_t ccs811_app_start(struct ccs811_dev *dev);
 
 #endif /* CCS811_CCS811_H_ */
