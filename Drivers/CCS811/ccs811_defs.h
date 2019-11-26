@@ -279,7 +279,7 @@ enum ccs811_drive_mode {
 /*!
  *	@brief Type definitions
  */
-typedef uint8_t (*ccs811_com_fptr_t)(uint8_t ccs811_slave_address, uint8_t reg_addr, uint8_t *data, uint16_t data_len);
+typedef int8_t (*ccs811_com_fptr_t)(uint8_t ccs811_slave_address, uint8_t reg_addr, uint8_t *data, uint16_t data_len);
 typedef void (*ccs811_delay_fptr_t)(uint32_t period);
 
 /*!

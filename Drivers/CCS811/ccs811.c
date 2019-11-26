@@ -25,7 +25,7 @@ static int8_t null_ptr_check(const struct ccs811_dev *dev);
  */
 int8_t ccs811_init(struct ccs811_dev *dev)
 {
-	int8_t rslt;
+	int8_t rslt = CCS811_OK;
 
 	/* R/W Try Count */
 	uint8_t try_count = 5;
@@ -45,6 +45,29 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 		rslt = ccs811_read_hw_id(dev);
 
 		if ((rslt == CCS811_OK) && (dev->hw_id == CCS811_HW_ID))
+		{
+			break;
+		}
+
+		/* Try Again */
+		try_count--;
+
+		/* Out of tries */
+		if (!try_count)
+		{
+			return rslt;
+		}
+	}
+
+	try_count = 5;
+
+	/* Try to read Hardware version of the Sensor */
+	while (try_count)
+	{
+		/* Read the status register of the CCS811 sensor*/
+		rslt = ccs811_read_hw_version(dev);
+
+		if ((rslt == CCS811_OK) && (dev->status_reg == CCS811_HW_ID))
 		{
 			break;
 		}
@@ -89,6 +112,29 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 	{
 		/* Write to the measurement mode register */
 		rslt = ccs811_set_meas_mode_reg(dev);
+
+		if ((rslt == CCS811_OK))
+		{
+			break;
+		}
+
+		/* Try Again */
+		try_count--;
+
+		/* Out of tries */
+		if (!try_count)
+		{
+			return rslt;
+		}
+	}
+
+	try_count = 5;
+
+	/* Trigger Sensor to go into application mode */
+	while(try_count)
+	{
+		/* Write to the measurement mode register */
+		rslt = ccs811_app_start(dev);
 
 		if ((rslt == CCS811_OK))
 		{
