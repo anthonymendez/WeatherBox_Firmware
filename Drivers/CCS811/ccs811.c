@@ -57,6 +57,9 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 		{
 			return rslt;
 		}
+
+		/* Wait for 1 ms */
+		dev->delay_ms(1);
 	}
 
 	try_count = 5;
@@ -80,6 +83,9 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 		{
 			return rslt;
 		}
+
+		/* Wait for 1 ms */
+		dev->delay_ms(1);
 	}
 
 	try_count = 5;
@@ -103,6 +109,9 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 		{
 			return rslt;
 		}
+
+		/* Wait for 1 ms */
+		dev->delay_ms(1);
 	}
 
 	try_count = 5;
@@ -149,6 +158,9 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 		{
 			return rslt;
 		}
+
+		/* Wait for 1 ms */
+		dev->delay_ms(1);
 	}
 
 	return rslt;
