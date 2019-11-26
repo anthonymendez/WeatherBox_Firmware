@@ -189,6 +189,16 @@
 
 #define CCS811_APP_VERIFY_COMPLETE_MSK	UINT8_C(0x20)
 
+#define CCS811_THRESHOLDS_LOW_BYTE0_MSK			UINT16_C(0xFF00)
+#define CCS811_THRESHOLDS_LOW_BYTE1_MSK			UINT16_C(0x00FF)
+#define CCS811_THRESHOLDS_HIGH_BYTE0_MSK		UINT16_C(0xFF00)
+#define CCS811_THRESHOLDS_HIGH_BYTE1_MSK		UINT16_C(0x00FF)
+
+#define CCS811_BASELINE_BYTE0_MSK	UINT16_C(0xFF00)
+#define CCS811_BASELINE_BYTE1_MSK	UINT16_C(0x00FF)
+
+#define CCS811_HW_VERSION_HIGH_BYTE_MSK	UINT8_C(0xF0)
+
 /**\name Macros for Byte IDs in multi-byte registers */
 #define CCS811_ALG_RESULT_DATA_ECO2_HIGH_BYTE	UINT8_C(0x00)
 #define CCS811_ALG_RESULT_DATA_ECO2_LOW_BYTE	UINT8_C(0x01)
@@ -243,6 +253,8 @@
 #define CCS811_SW_RESET_RESET_DEFAULT_VALUE_BYTE_3	UINT8_C(0x8A)
 
 #define CCS811_APP_START_BOOT_TO_RUN_DEFAULT_VALUE	UINT8_C(0xF4)
+
+#define CCS811_HW_VERSION_HW_VERSION_TOP_4_BITS	UINT8_C(0x10)
 
 /*!
  * @brief Interface selection Enums
@@ -324,8 +336,8 @@ struct ccs811_env_data {
 
 /*!
  * 	@brief NTC Data Register Struct
- *	v_ref_mv - Voltage across R_ref in mV
- *	v_ntc_mv - Voltage across R_ntc in mV
+ *	v_ref_mv - Voltage across R_ref in mV - Byte 0 [7:0], Byte 1 [7:0]
+ *	v_ntc_mv - Voltage across R_ntc in mV - Byte 2 [7:0], Byte 3 [7:0]
  */
 struct ccs811_ntc {
 	uint16_t v_ref_mv;
@@ -362,6 +374,9 @@ struct ccs811_fw_app_version {
 struct ccs811_dev{
 	/*! Hardware ID */
 	uint8_t hw_id;
+
+	/*! Hardware ID */
+	uint8_t hw_version;
 
 	/*! Device Address */
 	uint8_t dev_addr;
