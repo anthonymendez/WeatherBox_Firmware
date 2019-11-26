@@ -30,7 +30,7 @@ Core/Src/stm32l0xx_it.o: ../Core/Src/stm32l0xx_it.c ../Core/Inc/main.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart_ex.h \
  C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280/bme280.h \
  C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280/bme280_defs.h \
- ../Core/Inc/stm32l0xx_it.h
+ ../Core/Inc/cJSON.h ../Core/Inc/stm32l0xx_it.h
 
 ../Core/Inc/main.h:
 
@@ -95,5 +95,7 @@ Core/Src/stm32l0xx_it.o: ../Core/Src/stm32l0xx_it.c ../Core/Inc/main.h \
 C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280/bme280.h:
 
 C:/Users/sdp/STM32CubeIDE/workspace_1.1.0/WeatherBox_Firmware/Drivers/BME280/bme280_defs.h:
+
+../Core/Inc/cJSON.h:
 
 ../Core/Inc/stm32l0xx_it.h:

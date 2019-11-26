@@ -85,6 +85,7 @@ static uint16_t reverse(uint16_t);
 static float adc_to_voltage(uint16_t);
 static void calculate_wind_speed(uint16_t, uint16_t, float*, float*);
 void bme280_read_data_forced_mode(struct bme280_dev*);
+char *createJSON(float wind_speed, float temperature);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -206,6 +207,7 @@ void TIM2_IRQHandler(void)
   float bme280_humidity = 0;
   float md_wind_speed = 0;
   float md_temp = 0;
+  char data[70];
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -240,7 +242,9 @@ void TIM2_IRQHandler(void)
   bme280_pressure = comp_data.pressure * 0.01; // hPa Pressure Units... for Debug Purposes
 
   /* Transmit over WiFi */
+  strcpy(data,createJSON(md_wind_speed, bme280_temperature));
 
+  transmitWifi(data);
 //  /* Toggle SS1 Pin Low to select sensor */
     HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
 //  // TODO: Read from Sensor
@@ -326,22 +330,69 @@ static uint16_t reverse(uint16_t x)
 /**
  * TODO: Write function to write data to WiFi module
  */
-void transmitWifi(uint16_t wind_speed, uint16_t temp)
+void transmitWifi(char* info)
 {
-	char start[] = "AT+CIPSTART=\"TCP\",\"<enterIP>\",\"80\"\r\n";
+
+	char start[] = "AT+CIPSTART=\"TCP\",\"40.71.11.134\",80\r\n";
 	HAL_UART_Transmit(&huart1, (uint8_t *) start, strlen(start), 500);
 	HAL_Delay(2000);
-	char send[] = "AT+CIPSEND=2\r\n";
+	char send[] = "AT+CIPSEND=";
+	char ret[] = "\r\n";
 	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
+	HAL_Delay(1000);
+	HAL_UART_Transmit(&huart1, (uint8_t *)sizeof(info), sizeof(uint16_t), 500);
+	HAL_Delay(1000);
+	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
+	HAL_Delay(1000);
+	HAL_UART_Transmit(&huart1, (uint8_t *) info, strlen(info), 500);
 	HAL_Delay(2000);
-	HAL_UART_Transmit(&huart1, wind_speed, sizeof(wind_speed), 500);
-	HAL_Delay(2000);
-	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
-	HAL_Delay(2000);
-	HAL_UART_Transmit(&huart1, temp, sizeof(temp), 500);
+	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
 }
 
+char *createJSON(float wind_speed, float temperature)
+{
+	cJSON *id = NULL;
+	cJSON *timestamp = NULL;
+	cJSON *speed = NULL;
+	cJSON *temp = NULL;
+	char *string = NULL;
 
+	cJSON *data = cJSON_CreateObject();
+	if (data == NULL)
+	{
+		goto end;
+	}
+	id = cJSON_CreateNumber(1);
+	if (id == NULL)
+	{
+		goto end;
+	}
+	cJSON_AddItemToObject(data, "system_id", id);
+	timestamp = cJSON_CreateNumber(1);
+	cJSON_AddItemToObject(data, "timestamp", timestamp);
+	temp = cJSON_CreateNumber(temperature);
+	if (temp == NULL)
+	{
+		goto end;
+	}
+	cJSON_AddItemToObject(data, "temperature", temp);
+	speed = cJSON_CreateNumber(wind_speed);
+	if (speed == NULL)
+	{
+		goto end;
+	}
+	cJSON_AddItemToObject(data, "wind_speed", speed);
+
+	string = cJSON_Print(data);
+	if (string == NULL)
+	{
+		return -1;
+	}
+
+	end:
+	cJSON_Delete(data);
+	return string;
+}
 
 /**
  * 	@brief Function handles converting adc value to a voltage.

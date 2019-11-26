@@ -35,6 +35,7 @@ extern "C" {
 #include <math.h>
 #include "bme280.h"
 #include "string.h"
+#include "cJSON.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -61,6 +62,7 @@ int8_t user_i2c_read(uint8_t, uint8_t, uint8_t*, uint16_t);
 int8_t user_i2c_write(uint8_t, uint8_t, uint8_t*, uint16_t);
 void connectWifi();
 void wifiInit();
+void wifiRST();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

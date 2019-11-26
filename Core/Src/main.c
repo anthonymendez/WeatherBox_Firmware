@@ -115,7 +115,10 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
+  wifiRST();
+  HAL_Delay(1000);
   wifiInit();
+  HAL_Delay(1000);
   BME280_INIT();
   bme280_init_complete = 1;
   HAL_TIM_Base_Start_IT(&htim2);
@@ -547,6 +550,11 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 	rslt = HAL_I2C_Mem_Write(&hi2c1, write_mode, reg_addr, sizeof(uint8_t), reg_data, len, I2C_TIMEOUT);
 	HAL_I2C_DeInit(&hi2c1);
 	return rslt;
+}
+void wifiRST()
+{
+	char rst[] = "AT+RST\r\n";
+	HAL_UART_Transmit(&huart1, (uint8_t *)rst, strlen(rst), 500);
 }
 
 void wifiInit()
