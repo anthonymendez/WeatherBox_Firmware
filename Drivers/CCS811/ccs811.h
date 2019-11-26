@@ -173,7 +173,6 @@ int8_t ccs811_read_hw_id(struct ccs811_dev *dev);
 
 /*!
  *	@brief This API reads from the Hardware Version register.
- *	Should be 0x81.
  *
  *	@param[out] hw_version : Hardware Version.
  *	@param[in] dev : Structure instance of ccs811_dev
@@ -181,11 +180,10 @@ int8_t ccs811_read_hw_id(struct ccs811_dev *dev);
  *	@return Result of API execution status.
  *	@retval zero -> Success / + value -> Warning / - value -> Error
  */
-int8_t ccs811_read_hw_version(uint8_t hw_version, struct ccs811_dev *dev);
+int8_t ccs811_read_hw_version(struct ccs811_dev *dev);
 
 /*!
  *	@brief This API reads from the Firmware Boot Version register.
- *	Should be 0x1X.
  *
  *	@param[out] fw_boot_version : Firmware Boot Version.
  *	@param[in] dev : Structure instance of ccs811_dev
@@ -193,7 +191,7 @@ int8_t ccs811_read_hw_version(uint8_t hw_version, struct ccs811_dev *dev);
  *	@return Result of API execution status.
  *	@retval zero -> Success / + value -> Warning / - value -> Error
  */
-int8_t ccs811_read_fw_boot_version(struct ccs811_fw_boot_version fw_boot_version, struct ccs811_dev *dev);
+int8_t ccs811_read_fw_boot_version(struct ccs811_fw_boot_version *fw_boot_version, struct ccs811_dev *dev);
 
 /*!
  *	@brief This API reads from the Firmware App Version register.
@@ -204,7 +202,7 @@ int8_t ccs811_read_fw_boot_version(struct ccs811_fw_boot_version fw_boot_version
  *	@return Result of API execution status.
  *	@retval zero -> Success / + value -> Warning / - value -> Error
  */
-int8_t ccs811_read_fw_app_version(struct ccs811_fw_app_version fw_app_version, struct ccs811_dev *dev);
+int8_t ccs811_read_fw_app_version(struct ccs811_fw_app_version *fw_app_version, struct ccs811_dev *dev);
 
 /*!
  *	@brief This API reads the error id register.
@@ -238,13 +236,14 @@ int8_t ccs811_perform_app_erase(struct ccs811_dev *dev);
 
 /*!
  *	@brief This API transmits flash code to APP_DATA.
+ *	app_data must be 9 bytes long.
  *
  *	@param[in,out] dev : Structure instance of ccs811_dev
  *
  *	@return Result of API execution status
  *	@retval zero -> Success / + value -> Warning / - value -> Error
  */
-int8_t ccs811_set_app_data(struct ccs811_dev *dev);
+int8_t ccs811_set_app_data(uint8_t *app_data, struct ccs811_dev *dev);
 
 /*!
  * 	@brief This API transitions the sensor from boot mode to application mode,
