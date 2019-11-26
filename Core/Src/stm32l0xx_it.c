@@ -97,7 +97,7 @@ extern TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN EV */
 extern SPI_HandleTypeDef hspi1;
 extern I2C_HandleTypeDef hi2c1;
-extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart1;
 extern int bme280_init_complete;
 extern struct bme280_settings bme280_device_settings;
 extern struct bme280_dev bme280_device;
@@ -201,7 +201,6 @@ void TIM2_IRQHandler(void)
   uint16_t din_ch6 = 0;
   uint16_t din_ch7 = 0;
   char wifi_data1[2];
-  char UARTsend[] = "AT\n";
   float bme280_pressure = 0;
   float bme280_temperature = 0;
   float bme280_humidity = 0;
@@ -241,8 +240,6 @@ void TIM2_IRQHandler(void)
   bme280_pressure = comp_data.pressure * 0.01; // hPa Pressure Units... for Debug Purposes
 
   /* Transmit over WiFi */
-  HAL_UART_Transmit(&huart2, (uint8_t *) UARTsend, strlen(UARTsend), 500);
-  HAL_UART_Receive(&huart2, (uint8_t *)wifi_data1, 2, 500);
 
 //  /* Toggle SS1 Pin Low to select sensor */
     HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
@@ -329,7 +326,20 @@ static uint16_t reverse(uint16_t x)
 /**
  * TODO: Write function to write data to WiFi module
  */
-
+void transmitWifi(uint16_t wind_speed, uint16_t temp)
+{
+	char start[] = "AT+CIPSTART=\"TCP\",\"<enterIP>\",\"80\"\r\n";
+	HAL_UART_Transmit(&huart1, (uint8_t *) start, strlen(start), 500);
+	HAL_Delay(2000);
+	char send[] = "AT+CIPSEND=2\r\n";
+	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
+	HAL_Delay(2000);
+	HAL_UART_Transmit(&huart1, wind_speed, sizeof(wind_speed), 500);
+	HAL_Delay(2000);
+	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
+	HAL_Delay(2000);
+	HAL_UART_Transmit(&huart1, temp, sizeof(temp), 500);
+}
 
 
 

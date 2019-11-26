@@ -59,6 +59,8 @@ void Error_Handler(void);
 void user_delay_ms(uint32_t);
 int8_t user_i2c_read(uint8_t, uint8_t, uint8_t*, uint16_t);
 int8_t user_i2c_write(uint8_t, uint8_t, uint8_t*, uint16_t);
+void connectWifi();
+void wifiInit();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
