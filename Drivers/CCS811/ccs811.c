@@ -70,7 +70,8 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 		/* Read the status register of the CCS811 sensor*/
 		rslt = ccs811_read_hw_version(dev);
 
-		if ((rslt == CCS811_OK) && (dev->status_reg == CCS811_HW_ID))
+		if ((rslt == CCS811_OK) &&
+			((dev->hw_version & CCS811_HW_VERSION_HIGH_BYTE_MSK) == CCS811_HW_VERSION_TOP_4_BITS))
 		{
 			break;
 		}
@@ -96,7 +97,7 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 		/* Read the status register of the CCS811 sensor*/
 		rslt = ccs811_read_status_reg(dev);
 
-		if ((rslt == CCS811_OK) && (dev->status_reg == CCS811_HW_ID))
+		if (rslt == CCS811_OK)
 		{
 			break;
 		}
@@ -639,7 +640,7 @@ int8_t ccs811_read_hw_version(struct ccs811_dev *dev)
 
 	/* Check if Hardware Version matches what we should have */
 	if ((uint8_t)(temp_buffer[0] & CCS811_HW_VERSION_HIGH_BYTE_MSK) !=
-			(uint8_t)(CCS811_HW_VERSION_HW_VERSION_TOP_4_BITS))
+			(uint8_t)(CCS811_HW_VERSION_TOP_4_BITS))
 	{
 		rslt = CCS811_E_NVM_COPY_FAILED;
 		return rslt;
