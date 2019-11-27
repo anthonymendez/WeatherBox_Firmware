@@ -99,7 +99,65 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 
 		if (rslt == CCS811_OK)
 		{
+			if (dev->status_reg & CCS811_STATUS_APP_VALID_MSK)
+			{
+				break;
+			}
+		}
+
+		/* Try Again */
+		try_count--;
+
+		/* Out of tries */
+		if (!try_count)
+		{
+			return rslt;
+		}
+
+		/* Wait for 1 ms */
+		dev->delay_ms(1);
+	}
+
+	try_count = 5;
+
+	/* Trigger Sensor to go into application mode */
+	while(try_count)
+	{
+		/* Start device */
+		rslt = ccs811_app_start(dev);
+
+		if ((rslt == CCS811_OK))
+		{
 			break;
+		}
+
+		/* Try Again */
+		try_count--;
+
+		/* Out of tries */
+		if (!try_count)
+		{
+			return rslt;
+		}
+
+		/* Wait for 1 ms */
+		dev->delay_ms(1);
+	}
+
+	try_count = 5;
+
+	/* Try to read Status Reg of Sensor */
+	while (try_count)
+	{
+		/* Read the status register of the CCS811 sensor*/
+		rslt = ccs811_read_status_reg(dev);
+
+		if (rslt == CCS811_OK)
+		{
+			if (dev->status_reg & CCS811_STATUS_FW_MODE_MSK)
+			{
+				break;
+			}
 		}
 
 		/* Try Again */
@@ -136,32 +194,6 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 		{
 			return rslt;
 		}
-	}
-
-	try_count = 5;
-
-	/* Trigger Sensor to go into application mode */
-	while(try_count)
-	{
-		/* Start device */
-		rslt = ccs811_app_start(dev);
-
-		if ((rslt == CCS811_OK))
-		{
-			break;
-		}
-
-		/* Try Again */
-		try_count--;
-
-		/* Out of tries */
-		if (!try_count)
-		{
-			return rslt;
-		}
-
-		/* Wait for 1 ms */
-		dev->delay_ms(1);
 	}
 
 	return rslt;
