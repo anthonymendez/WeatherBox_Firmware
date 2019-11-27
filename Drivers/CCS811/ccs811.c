@@ -67,7 +67,7 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 	/* Try to read Hardware version of the Sensor */
 	while (try_count)
 	{
-		/* Read the status register of the CCS811 sensor*/
+		/* Read the hw version register of the CCS811 sensor*/
 		rslt = ccs811_read_hw_version(dev);
 
 		if ((rslt == CCS811_OK) &&
@@ -143,7 +143,7 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 	/* Trigger Sensor to go into application mode */
 	while(try_count)
 	{
-		/* Write to the measurement mode register */
+		/* Start device */
 		rslt = ccs811_app_start(dev);
 
 		if ((rslt == CCS811_OK))
