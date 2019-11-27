@@ -61,6 +61,15 @@ int8_t bme280_init_rslt = BME280_OK;
 int8_t bme280_rslt = BME280_OK;
 uint8_t bme280_settings_sel = BME280_OSR_PRESS_SEL | BME280_OSR_TEMP_SEL | BME280_OSR_HUM_SEL | BME280_FILTER_SEL;
 struct bme280_data comp_data;
+
+	/* CCS811 Variables */
+struct ccs811_env_data ccs811_environmental_data;
+struct ccs811_measurement_data ccs811_measured_data;
+struct ccs811_dev ccs811_device;
+uint16_t ccs811_baseline;
+int8_t ccs811_init_rslt = CCS811_OK;
+int8_t ccs811_rslt = CCS811_OK;
+int ccs811_init_complete = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,6 +82,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 static void BME280_INIT(void);
+static void CCS811_INIT(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -117,6 +127,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   BME280_INIT();
   bme280_init_complete = 1;
+  CCS811_INIT();
+  ccs811_init_complete = 1;
   HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
@@ -438,6 +450,21 @@ static void BME280_INIT(void)
 	bme280_init_rslt |= bme280_set_sensor_settings(bme280_settings_sel, &bme280_device); // Apply Settings
 	bme280_init_rslt |= bme280_set_sensor_mode(BME280_SLEEP_MODE, &bme280_device); // Set to sleep mode
 }
+
+/**
+ *Initializes AMS CCS811 Air Quality Sensor
+ */
+static void CCS811_INIT(void)
+{
+	ccs811_device.dev_addr = CCS811_I2C_ADDR_PRIM;
+	ccs811_device.measure_mode_reg = (uint8_t)(CCS811_DRIVE_MODE_CONSTANT_1s_MODE << 4);
+	ccs811_device.read = user_i2c_read;
+	ccs811_device.write = user_i2c_write;
+	ccs811_device.delay_ms = user_delay_ms;
+	ccs811_init_rslt |= ccs811_init(&ccs811_device);
+	ccs811_init_rslt |= ccs811_read_baseline_reg(&ccs811_baseline, &ccs811_device);
+}
+
 /*
  *	@brief Function Pointer for Delaying the BME280.
  *	After a number of milliseconds have passed, we
@@ -450,12 +477,15 @@ void user_delay_ms(uint32_t milliseconds)
 }
 
 /*
- *	@brief Function Pointer for reading data from the BME280 using the I2C protocol.
+ *	@brief Function Pointer for reading data from the BME280 or CCS811 using the I2C protocol.
  * 	@param[in] dev_id : I2C address of the device.
- * 	@param[in] reg_addr : Register address of what we want to read in from the BME280.
- * 	@param[out] reg_data : Data we're reading out from the register. SHOULD NOT BE CALLOCED YET.
+ * 	@param[in] reg_addr : Register address of what we want to read in from the sensor.
+ * 	@param[out] reg_data : Data we're reading out from the register.
  * 	@param[in] len : Amount of registers to read from
  *
+ *************************************************************
+ *
+ *  		BME280
  * 	Data readout is done by starting a burst read from 0xF7 to 0xFC (temperature and pressure)
  * 	or from 0xF7 to 0xFE (temperature, pressure and humidity). The data are read out in an unsigned
  * 	20-bit format both for pressure and for temperature and in an unsigned 16-bit format for humidity.

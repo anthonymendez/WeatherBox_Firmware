@@ -107,6 +107,14 @@ extern uint8_t bme280_settings_sel;
 extern const int SPI_TIMEOUT;
 extern const int I2C_TIMEOUT;
 extern struct bme280_data comp_data;
+
+	/* CCS811 Variables */
+extern struct ccs811_env_data ccs811_environmental_data;
+extern struct ccs811_measurement_data ccs811_measured_data;
+extern struct ccs811_dev ccs811_device;
+extern int8_t ccs811_init_rslt;
+extern int8_t ccs811_rslt;
+extern int ccs811_init_complete;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -232,6 +240,14 @@ void TIM2_IRQHandler(void)
 
   /* Data is output to comp_data */
   bme280_read_data_forced_mode(&bme280_device);
+
+  ccs811_rslt = CCS811_OK;
+  /* Format Environmental Data Struct */
+  ccs811_rslt |= ccs811_convert_temp_and_humid_to_env_data(comp_data.humidity, comp_data.temperature, &ccs811_environmental_data);
+  /* Set Environmental Data for CCS811 */
+  ccs811_rslt |= ccs811_set_env_data(&ccs811_environmental_data, &ccs811_device);
+  /* Read Algorithm Results from CCS811 */
+  ccs811_rslt |= ccs811_read_alg_result_data(&ccs811_measured_data, &ccs811_device);
 
   /* Calculations Done Here */
   // TODO: Double check later if this is properly compensated
