@@ -257,26 +257,6 @@
 #define CCS811_HW_VERSION_TOP_4_BITS	UINT8_C(0x10)
 
 /*!
- * @brief Interface selection Enums
- */
-enum ccs811_drive_mode {
-    /*! Idle (No measurements) */
-    IDLE,
-
-    /*! Constant Power Mode (Measurement every second) */
-    CONSTANT_1S,
-
-	/*! Pulse Heating Mode (Measurement every 10 seconds) */
-	PULSE_10S,
-
-	/*! Low Power Pulse Heating Mode (Measurement every 60 seconds) */
-	PULSE_60S,
-
-	/*! Constant Power Mode (Measurement every 250 milliseconds) */
-	CONSTANT_250MS
-};
-
-/*!
  *	@brief Type definitions
  */
 typedef int8_t (*ccs811_com_fptr_t)(uint8_t ccs811_slave_address, uint8_t reg_addr, uint8_t *data, uint16_t data_len);
@@ -398,9 +378,6 @@ struct ccs811_dev{
 
 	/*! Delay function pointer */
 	ccs811_delay_fptr_t delay_ms;
-
-	/*! Drive Mode Enum */
-	enum ccs811_drive_mode drive_mode;
 };
 
 #endif /* CCS811_CCS811_DEFS_H_ */
