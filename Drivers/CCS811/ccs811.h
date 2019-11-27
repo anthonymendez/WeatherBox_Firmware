@@ -256,4 +256,17 @@ int8_t ccs811_set_app_data(uint8_t *app_data, struct ccs811_dev *dev);
  */
 int8_t ccs811_app_start(struct ccs811_dev *dev);
 
+/*!
+ *	@brief This API sets the env_data struct given a 32 bit int rel_humidity,
+ *	and relative humidity 32 bit int.
+ *
+ *	@param[in] rel_humidity : Relative Humidity
+ *	@param[in] temperature : Temperature in Celsius
+ *	@param[out] env_data : Structure instance of CCS811 environmental data
+ *
+ * 	@return Result of API execution status
+ *	@retval zero -> Success / + value -> Warning / - value -> Error
+ */
+int8_t ccs811_convert_temp_and_humid_to_env_data(uint32_t rel_humidity, int32_t temperature, struct ccs811_env_data *env_data);
+
 #endif /* CCS811_CCS811_H_ */

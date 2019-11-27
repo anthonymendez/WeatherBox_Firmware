@@ -892,7 +892,64 @@ int8_t ccs811_app_start(struct ccs811_dev *dev)
 	return rslt;
 }
 
-/* Static Functions */
+/*!
+ *	@brief This API sets the env_data struct given a temperature float
+ *	and relative humidity float.
+ */
+int8_t ccs811_convert_temp_and_humid_to_env_data(uint32_t rel_humidity, int32_t temperature, struct ccs811_env_data *env_data)
+{
+	int8_t rslt = CCS811_OK;
+	float floatized_temp = temperature * 0.01;
+	float floatized_rel_humidity = rel_humidity / 1024.0;
+
+	/* Separate Relative Humidity Whole Numbers and Decimal Parts */
+	uint8_t rh_int_only = (int)(floatized_rel_humidity);
+	float rh_dec_only = floatized_rel_humidity - (float)(rh_int_only);
+
+	/* Separate Temperature Whole Numbers and Decimal Parts */
+	int8_t temp_int_only = (int)(floatized_temp);
+	float temp_dec_only = floatized_temp - (float)(temp_int_only);
+
+	/* Assign whole number part of RH% to struct */
+	env_data->humidity_perc = rh_int_only << 1;
+	/* Assign decimal part of RH% to struct
+	 * In accordance to how the RH% should be stored on sensor
+	 * See CCS811 Datasheet
+	 */
+	env_data->humidity_frac = 0;
+	float half = 0.5;
+	int half_counter;
+	for (half_counter = 8; half_counter >= 0; half_counter--)
+	{
+		if(rh_dec_only > half)
+		{
+			rh_dec_only -= half;
+			env_data->humidity_frac = (1 << half_counter);
+		}
+		half /= 2.0;
+	}
+
+	/* Assign whole number part of Temp to struct */
+	env_data->temperature_perc = (temp_int_only + 25) << 1;
+	/* Assign decimal part of Temp to struct
+	 * In accordance to how the Temp should be stored on sensor
+	 * See CCS811 Datasheet
+	 */
+	half = 0.5;
+	for (half_counter = 8; half_counter >= 0; half_counter--)
+	{
+		if(temp_dec_only > half)
+		{
+			temp_dec_only -= half;
+			env_data->temperature_frac = (1 << half_counter);
+		}
+		half /= 2.0;
+	}
+
+	return rslt;
+}
+
+/* Static Internal Functions */
 
 /*!
  * @brief This internal API is used to validate the device structure pointer for

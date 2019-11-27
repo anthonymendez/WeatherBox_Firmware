@@ -302,10 +302,10 @@ struct ccs811_raw_data {
 
 /*!
  *	@brief Environmental Data Struct
- *	Humidity Percent - Byte 0 [7:2]
- *	Humidity Fraction - Byte 0 [1:0], Byte 1 [7:0]
- *	Temperature 25*C - Byte 2 [7:2]
- *	Temperature 25*C Fraction - Byte 2 [1:0], Byte 3 [7:0]
+ *	Humidity Percent - Byte 0 [7:1]
+ *	Humidity Fraction - Byte 0 [0:0], Byte 1 [7:0]
+ *	Temperature 25*C - Byte 2 [7:1]
+ *	Temperature 25*C Fraction - Byte 2 [0:0], Byte 3 [7:0]
  */
 struct ccs811_env_data {
 	uint8_t humidity_perc;
