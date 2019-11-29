@@ -338,14 +338,16 @@ void transmitWifi(char* info)
 	HAL_Delay(2000);
 	char send[] = "AT+CIPSEND=";
 	char ret[] = "\r\n";
+	char post[] = "POST https://weatherbox.azurewebsites.net//map/data HTTP/1.1\nAccept:application/json, text/plain, */*\nAccept-Language:en-US,en;q=0.8,hi;q=0.6\nConnection:keep-alive\nContent-Type:application/json;charset=UTF-8\nHost:azurewebsites.net\n";
+	
+	// Send Command with size of message
 	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
-	HAL_Delay(1000);
-	HAL_UART_Transmit(&huart1, (uint8_t *)sizeof(info), sizeof(uint16_t), 500);
-	HAL_Delay(1000);
+	HAL_UART_Transmit(&huart1, (uint8_t *)(sizeof(info)+sizeof(post)), sizeof(uint16_t), 500);
 	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
-	HAL_Delay(1000);
+	
+	//Sending POST message
+	HAL_UART_Transmit(&huart1, (uint8_t *) post, strlen(post), 500);
 	HAL_UART_Transmit(&huart1, (uint8_t *) info, strlen(info), 500);
-	HAL_Delay(2000);
 	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
 }
 
