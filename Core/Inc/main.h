@@ -36,6 +36,9 @@ extern "C" {
 #include "bme280.h"
 #include "string.h"
 #include "cJSON.h"
+#include <stdio.h>
+#include <stdlib.h>
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

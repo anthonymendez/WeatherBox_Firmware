@@ -207,7 +207,7 @@ void TIM2_IRQHandler(void)
   float bme280_humidity = 0;
   float md_wind_speed = 0;
   float md_temp = 0;
-  char data[70];
+  char data[80];
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -333,20 +333,25 @@ static uint16_t reverse(uint16_t x)
 void transmitWifi(char* info)
 {
 
-	char start[] = "AT+CIPSTART=\"TCP\",\"40.71.11.134\",80\r\n";
-	HAL_UART_Transmit(&huart1, (uint8_t *) start, strlen(start), 500);
-	HAL_Delay(2000);
+	//char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
+	//HAL_UART_Transmit(&huart1, (uint8_t *) start, strlen(start), 500);
+	//HAL_Delay(2000);
 	char send[] = "AT+CIPSEND=";
 	char ret[] = "\r\n";
-	char post[] = "POST https://weatherbox.azurewebsites.net//map/data HTTP/1.1\nAccept:application/json, text/plain, */*\nAccept-Language:en-US,en;q=0.8,hi;q=0.6\nConnection:keep-alive\nContent-Type:application/json;charset=UTF-8\nHost:azurewebsites.net\n";
-	
+	char post[] = "POST /map/data HTTP/1.1\nAccept:application/json, text/plain, */*\nAccept-Language:en-US,en;q=0.8,hi;q=0.6\nConnection:keep-alive\nContent-Type:application/json;charset=UTF-8\nHost:weatherbox.azurewebsites.net\n";
+	int size = (int)(sizeof(info)+sizeof(post));
+	char sizeStr[3];
+	sprintf(sizeStr, "%u", size);
+
 	// Send Command with size of message
 	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *)(sizeof(info)+sizeof(post)), sizeof(uint16_t), 500);
+	HAL_UART_Transmit(&huart1, (uint8_t *) sizeStr, strlen(sizeStr), 500);
 	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
+	HAL_Delay(5000);
 	
 	//Sending POST message
 	HAL_UART_Transmit(&huart1, (uint8_t *) post, strlen(post), 500);
+	HAL_Delay(2000);
 	HAL_UART_Transmit(&huart1, (uint8_t *) info, strlen(info), 500);
 	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
 }

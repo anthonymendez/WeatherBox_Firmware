@@ -115,14 +115,16 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-  wifiRST();
-  HAL_Delay(1000);
-  wifiInit();
+  //wifiRST();
+  //HAL_Delay(1000);
+  //wifiInit();
   HAL_Delay(1000);
   BME280_INIT();
   bme280_init_complete = 1;
+  //connectWifi();
+  //HAL_Delay(5000);
   HAL_TIM_Base_Start_IT(&htim2);
-  connectWifi();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
