@@ -39,7 +39,7 @@ all: WeatherBox_Firmware.elf secondary-outputs
 
 # Tool invocations
 WeatherBox_Firmware.elf: $(OBJS) $(USER_OBJS) C:\Users\sdp\STM32CubeIDE\workspace_1.1.0\WeatherBox_Firmware\STM32L073RZTX_FLASH.ld
-	arm-none-eabi-gcc -o "WeatherBox_Firmware.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"C:\Users\sdp\STM32CubeIDE\workspace_1.1.0\WeatherBox_Firmware\STM32L073RZTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="WeatherBox_Firmware.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "WeatherBox_Firmware.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"C:\Users\sdp\STM32CubeIDE\workspace_1.1.0\WeatherBox_Firmware\STM32L073RZTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="WeatherBox_Firmware.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

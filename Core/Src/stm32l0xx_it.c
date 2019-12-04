@@ -85,7 +85,7 @@ static uint16_t reverse(uint16_t);
 static float adc_to_voltage(uint16_t);
 static void calculate_wind_speed(uint16_t, uint16_t, float*, float*);
 void bme280_read_data_forced_mode(struct bme280_dev*);
-char *createJSON(float wind_speed, float temperature);
+void transmitWifi(char *info);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -207,7 +207,8 @@ void TIM2_IRQHandler(void)
   float bme280_humidity = 0;
   float md_wind_speed = 0;
   float md_temp = 0;
-  char data[80];
+  char *json = NULL;
+  char data[100];
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -242,9 +243,11 @@ void TIM2_IRQHandler(void)
   bme280_pressure = comp_data.pressure * 0.01; // hPa Pressure Units... for Debug Purposes
 
   /* Transmit over WiFi */
-  strcpy(data,createJSON(md_wind_speed, bme280_temperature));
+
+  sprintf(data, "{ \"system_id:\":\"%d\", \"timestamp\":\"%d\", \"temperature\":\"%f\", \"wind_speed\":\"%f\"}", 1, 1, bme280_temperature, md_wind_speed);
 
   transmitWifi(data);
+
 //  /* Toggle SS1 Pin Low to select sensor */
     HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
 //  // TODO: Read from Sensor
@@ -333,73 +336,41 @@ static uint16_t reverse(uint16_t x)
 void transmitWifi(char* info)
 {
 
-	//char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
-	//HAL_UART_Transmit(&huart1, (uint8_t *) start, strlen(start), 500);
-	//HAL_Delay(2000);
+	char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
+	HAL_UART_Transmit(&huart1, (uint8_t *) start, strlen(start), 500);
+	HAL_Delay(2000);
 	char send[] = "AT+CIPSEND=";
 	char ret[] = "\r\n";
-	char post[] = "POST /map/data HTTP/1.1\nAccept:application/json, text/plain, */*\nAccept-Language:en-US,en;q=0.8,hi;q=0.6\nConnection:keep-alive\nContent-Type:application/json;charset=UTF-8\nHost:weatherbox.azurewebsites.net\n";
-	int size = (int)(sizeof(info)+sizeof(post));
-	char sizeStr[3];
-	sprintf(sizeStr, "%u", size);
+	char postFormat[] = "POST /map/data HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: https://weatherbox.azurewebsites.net/\r\nContent-Type: application/json\r\nContent-Length: %i\r\n\r\n";
+	char post[sizeof(postFormat)];
+	int jsonsize = (int)(strlen(info));
+	char jsonStr[sizeof(jsonsize)];
+	sprintf(jsonStr, "%u", jsonsize);
+	sprintf(post, postFormat, jsonsize);
+	int postsize = (int)(strlen(post));
+	char postStr[sizeof(postsize)];
+	sprintf(postStr, "%u", postsize);
+
 
 	// Send Command with size of message
 	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *) sizeStr, strlen(sizeStr), 500);
+	HAL_UART_Transmit(&huart1, (uint8_t *) postStr, strlen(postStr), 500);
 	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
-	HAL_Delay(5000);
+	HAL_Delay(1000);
 	
 	//Sending POST message
 	HAL_UART_Transmit(&huart1, (uint8_t *) post, strlen(post), 500);
+	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
 	HAL_Delay(2000);
+	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
+	HAL_UART_Transmit(&huart1, (uint8_t *) jsonStr, strlen(jsonStr), 500);
+	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
 	HAL_UART_Transmit(&huart1, (uint8_t *) info, strlen(info), 500);
 	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
+
+
 }
 
-char *createJSON(float wind_speed, float temperature)
-{
-	cJSON *id = NULL;
-	cJSON *timestamp = NULL;
-	cJSON *speed = NULL;
-	cJSON *temp = NULL;
-	char *string = NULL;
-
-	cJSON *data = cJSON_CreateObject();
-	if (data == NULL)
-	{
-		goto end;
-	}
-	id = cJSON_CreateNumber(1);
-	if (id == NULL)
-	{
-		goto end;
-	}
-	cJSON_AddItemToObject(data, "system_id", id);
-	timestamp = cJSON_CreateNumber(1);
-	cJSON_AddItemToObject(data, "timestamp", timestamp);
-	temp = cJSON_CreateNumber(temperature);
-	if (temp == NULL)
-	{
-		goto end;
-	}
-	cJSON_AddItemToObject(data, "temperature", temp);
-	speed = cJSON_CreateNumber(wind_speed);
-	if (speed == NULL)
-	{
-		goto end;
-	}
-	cJSON_AddItemToObject(data, "wind_speed", speed);
-
-	string = cJSON_Print(data);
-	if (string == NULL)
-	{
-		return -1;
-	}
-
-	end:
-	cJSON_Delete(data);
-	return string;
-}
 
 /**
  * 	@brief Function handles converting adc value to a voltage.
