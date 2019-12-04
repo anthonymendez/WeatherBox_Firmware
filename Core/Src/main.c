@@ -115,7 +115,7 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-  //wifiRST();
+  wifiRST();
   //HAL_Delay(1000);
   //wifiInit();
   HAL_Delay(1000);

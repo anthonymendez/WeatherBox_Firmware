@@ -244,7 +244,7 @@ void TIM2_IRQHandler(void)
 
   /* Transmit over WiFi */
 
-  sprintf(data, "{ \"system_id:\":\"%d\", \"timestamp\":\"%d\", \"temperature\":\"%f\", \"wind_speed\":\"%f\"}", 1, 1, bme280_temperature, md_wind_speed);
+  sprintf(data, "{ \"system_id\":\"%d\", \"timestamp\":\"%d\", \"temperature\":\"%f\", \"wind_speed\":\"%f\"}", 1, 1, bme280_temperature, md_wind_speed);
 
   transmitWifi(data);
 
@@ -341,7 +341,7 @@ void transmitWifi(char* info)
 	HAL_Delay(2000);
 	char send[] = "AT+CIPSEND=";
 	char ret[] = "\r\n";
-	char postFormat[] = "POST /map/data HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: https://weatherbox.azurewebsites.net/\r\nContent-Type: application/json\r\nContent-Length: %i\r\n\r\n";
+	char postFormat[] = "POST /map/data HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: weatherbox.azurewebsites.net\r\nContent-Type: application/json\r\nContent-Length: %i\r\n\r\n";
 	char post[sizeof(postFormat)];
 	int jsonsize = (int)(strlen(info));
 	char jsonStr[sizeof(jsonsize)];
@@ -422,6 +422,11 @@ static void calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_adc
 	*wind_speed = (wind_speed_vout - zero_voltage) / (3.038517 * pow(*temp_amb, 0.115157));
 	*wind_speed /= 0.087288;
 	*wind_speed = pow(*wind_speed, 3.009364);
+
+	if (isnanf(*wind_speed))
+	{
+		*wind_speed = 0;
+	}
 }
 
 void bme280_read_data_forced_mode(struct bme280_dev *dev)
