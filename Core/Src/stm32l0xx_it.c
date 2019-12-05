@@ -210,6 +210,7 @@ void TIM2_IRQHandler(void)
   float bme280_humidity = 0;
   float md_wind_speed = 0;
   float md_temp = 0;
+  uint64_t timestamp = time(NULL);
   char data[250];
 
   /* USER CODE END TIM2_IRQn 0 */
@@ -247,16 +248,15 @@ void TIM2_IRQHandler(void)
   /* Transmit over WiFi */
 
   sprintf(data, "{ \"system_id\":\"%lu%lu%lu\", "
-		  	  	  "\"timestamp\":\"%lu\", "
+		  	  	  "\"timestamp\":\"%llu\", "
 		  	  	  "\"temperature\":\"%f\", "
 		  	  	  "\"wind_speed\":\"%f\", "
 		  	  	  "\"pressure\":\"%f\", "
-		  	  	  "\"humidity\":\"%f\", "
-		  	  	  "}",
+		  	  	  "\"humidity\":\"%f\" }",
 				  stm32_dev_id_word0,
 				  stm32_dev_id_word1,
 				  stm32_dev_id_word2,
-				  (uint32_t) time(NULL),
+				  timestamp,
 				  bme280_temperature,
 				  md_wind_speed,
 				  bme280_pressure,
@@ -383,8 +383,6 @@ void transmitWifi(char* info)
 	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
 	HAL_UART_Transmit(&huart1, (uint8_t *) info, strlen(info), 500);
 	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
-
-
 }
 
 
