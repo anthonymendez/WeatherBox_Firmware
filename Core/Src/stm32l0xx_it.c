@@ -96,6 +96,10 @@ void transmitWifi(char *info);
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN EV */
+/* Unique Device ID */
+extern uint32_t stm32_dev_id_word0;
+extern uint32_t stm32_dev_id_word1;
+extern uint32_t stm32_dev_id_word2;
 extern SPI_HandleTypeDef hspi1;
 extern I2C_HandleTypeDef hi2c1;
 extern UART_HandleTypeDef huart1;
@@ -201,14 +205,12 @@ void TIM2_IRQHandler(void)
   uint16_t din_ch5 = 0;
   uint16_t din_ch6 = 0;
   uint16_t din_ch7 = 0;
-  char wifi_data1[2];
   float bme280_pressure = 0;
   float bme280_temperature = 0;
   float bme280_humidity = 0;
   float md_wind_speed = 0;
   float md_temp = 0;
-  char *json = NULL;
-  char data[100];
+  char data[250];
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -244,7 +246,21 @@ void TIM2_IRQHandler(void)
 
   /* Transmit over WiFi */
 
-  sprintf(data, "{ \"system_id\":\"%d\", \"timestamp\":\"%d\", \"temperature\":\"%f\", \"wind_speed\":\"%f\"}", 1, 1, bme280_temperature, md_wind_speed);
+  sprintf(data, "{ \"system_id\":\"%lu%lu%lu\", "
+		  	  	  "\"timestamp\":\"%lu\", "
+		  	  	  "\"temperature\":\"%f\", "
+		  	  	  "\"wind_speed\":\"%f\", "
+		  	  	  "\"pressure\":\"%f\", "
+		  	  	  "\"humidity\":\"%f\", "
+		  	  	  "}",
+				  stm32_dev_id_word0,
+				  stm32_dev_id_word1,
+				  stm32_dev_id_word2,
+				  (uint32_t) time(NULL),
+				  bme280_temperature,
+				  md_wind_speed,
+				  bme280_pressure,
+				  bme280_humidity);
 
   transmitWifi(data);
 
