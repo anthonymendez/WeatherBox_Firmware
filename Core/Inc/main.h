@@ -33,11 +33,12 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "bme280.h"
 #include "string.h"
 #include "cJSON.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 /* USER CODE END Includes */
 
