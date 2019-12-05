@@ -50,11 +50,15 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-int bme280_init_complete = 0;
-
+	/* Unique Device ID */
+uint32_t stm32_dev_id_word0;
+uint32_t stm32_dev_id_word1;
+uint32_t stm32_dev_id_word2;
+	/* Timeouts in milliseconds */
 const int SPI_TIMEOUT = 500;
 const int I2C_TIMEOUT = 500;
 	/* BME280 Variables */
+int bme280_init_complete = 0;
 struct bme280_settings bme280_device_settings;
 struct bme280_dev bme280_device;
 int8_t bme280_init_rslt = BME280_OK;
@@ -97,6 +101,10 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  /* Get Unique Device ID */
+  stm32_dev_id_word0 = HAL_GetUIDw0();
+  stm32_dev_id_word1 = HAL_GetUIDw1();
+  stm32_dev_id_word2 = HAL_GetUIDw2();
   /* USER CODE END Init */
 
   /* Configure the system clock */
