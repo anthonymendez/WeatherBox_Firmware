@@ -43,6 +43,8 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
+RTC_HandleTypeDef hrtc;
+
 SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim2;
@@ -65,6 +67,11 @@ int8_t bme280_init_rslt = BME280_OK;
 int8_t bme280_rslt = BME280_OK;
 uint8_t bme280_settings_sel = BME280_OSR_PRESS_SEL | BME280_OSR_TEMP_SEL | BME280_OSR_HUM_SEL | BME280_FILTER_SEL;
 struct bme280_data comp_data;
+	/* RTC Variables */
+RTC_TimeTypeDef currentTime;
+RTC_DateTypeDef currentDate;
+time_t timestamp;
+struct tm currTime;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -74,6 +81,7 @@ static void MX_SPI1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_RTC_Init(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 static void BME280_INIT(void);
@@ -119,17 +127,31 @@ int main(void)
   MX_TIM2_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
+  MX_RTC_Init();
 
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-  wifiRST();
+  HAL_RTC_GetTime(&hrtc, &currentTime, RTC_FORMAT_BIN);
+  HAL_RTC_GetDate(&hrtc, &currentDate, RTC_FORMAT_BIN);
+
+  currTime.tm_year = currentDate.Year + 2019;  // In fact: 2000 + 18 - 1900
+  currTime.tm_mday = currentDate.Date;
+  currTime.tm_mon  = currentDate.Month;
+
+  currTime.tm_hour = currentTime.Hours;
+  currTime.tm_min  = currentTime.Minutes;
+  currTime.tm_sec  = currentTime.Seconds;
+
+  timestamp = mktime(&currTime);
+//  wifiRST();
   //HAL_Delay(1000);
-  //wifiInit();
+  wifiInit();
+  wifi_get_timestamp();
   HAL_Delay(1000);
   BME280_INIT();
   bme280_init_complete = 1;
-  //connectWifi();
+  connectWifi();
   //HAL_Delay(5000);
   HAL_TIM_Base_Start_IT(&htim2);
 
@@ -162,7 +184,8 @@ void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_5;
@@ -184,9 +207,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1
+                              |RCC_PERIPHCLK_RTC;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -247,6 +272,69 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  RTC_TimeTypeDef sTime = {0};
+  RTC_DateTypeDef sDate = {0};
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+  /** Initialize RTC Only 
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* USER CODE BEGIN Check_RTC_BKUP */
+    
+  /* USER CODE END Check_RTC_BKUP */
+
+  /** Initialize RTC and set the Time and Date 
+  */
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sDate.WeekDay = RTC_WEEKDAY_SUNDAY;
+  sDate.Month = RTC_MONTH_DECEMBER;
+  sDate.Date = 1;
+  sDate.Year = 0;
+
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
 
 }
 
@@ -571,12 +659,54 @@ void wifiInit()
 {
 	char set[] = "AT+CWMODE=1\r\n";
 	HAL_UART_Transmit(&huart1, (uint8_t *) set, strlen(set), 500);
+	HAL_Delay(5);
+
+	char uart_set[] = "AT+UART_CUR=115200,8,1,0,0\r\n";
+	HAL_UART_Transmit(&huart1, (uint8_t *) uart_set, strlen(uart_set), 500);
+	HAL_Delay(5);
+
+	char uart_set_def[] = "AT+UART_DEF=115200,8,1,0,0\r\n";
+	HAL_UART_Transmit(&huart1, (uint8_t *) uart_set_def, strlen(uart_set_def), 500);
+	HAL_Delay(5);
+
+	char recv_mode[] = "AT+CIPRECVMODE=1\r\n";
+	HAL_UART_Transmit(&huart1, (uint8_t *) recv_mode, strlen(recv_mode), 500);
+	HAL_Delay(5);
 }
 
 void connectWifi()
 {
 	char connect[] = "AT+CWJAP=\"WeatherBox\",\"WinDrone807\"\r\n";
 	HAL_UART_Transmit(&huart1, (uint8_t *) connect, strlen(connect), 500);
+	HAL_Delay(5);
+}
+
+void wifi_get_timestamp()
+{
+	char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
+	HAL_UART_Transmit(&huart1, (uint8_t *) start, strlen(start), 500);
+	HAL_Delay(2000);
+	char send[] = "AT+CIPSEND=";
+	char recv[] = "AT+CIPRECVDATA=1000\r\n";
+	char ret[] = "\r\n";
+	char get[] = "GET /timestamp HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: weatherbox.azurewebsites.net\r\n\r\n";
+	int get_size = (int)(strlen(get));
+	char get_str[sizeof(get_size)];
+	sprintf(get_str, "%u", get_size);
+	char *receiveBuffer0 = calloc(1000, sizeof(char));
+
+
+	// Send Command with size of message
+	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
+	HAL_UART_Transmit(&huart1, (uint8_t *) get_str, strlen(get_str), 500);
+	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
+	HAL_Delay(1000);
+
+	//Sending GET message
+	HAL_UART_Transmit(&huart1, (uint8_t *) get, strlen(get), 500);
+//	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
+//	HAL_UART_Transmit(&huart1, (uint8_t *) recv, strlen(recv), 500);
+	HAL_UART_Receive(&huart1, &receiveBuffer0, strlen(receiveBuffer0), 5000);
 }
 /* USER CODE END 4 */
 

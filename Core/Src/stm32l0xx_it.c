@@ -248,7 +248,7 @@ void TIM2_IRQHandler(void)
   /* Transmit over WiFi */
 
   sprintf(data, "{ \"system_id\":\"%lu%lu%lu\", "
-		  	  	  "\"timestamp\":\"%llu\", "
+		  	  	  "\"timestamp\":\"-1\", "
 		  	  	  "\"temperature\":\"%f\", "
 		  	  	  "\"wind_speed\":\"%f\", "
 		  	  	  "\"pressure\":\"%f\", "
@@ -256,7 +256,6 @@ void TIM2_IRQHandler(void)
 				  stm32_dev_id_word0,
 				  stm32_dev_id_word1,
 				  stm32_dev_id_word2,
-				  timestamp,
 				  bme280_temperature,
 				  md_wind_speed,
 				  bme280_pressure,

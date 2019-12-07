@@ -67,6 +67,7 @@ int8_t user_i2c_write(uint8_t, uint8_t, uint8_t*, uint16_t);
 void connectWifi();
 void wifiInit();
 void wifiRST();
+void wifi_get_timestamp();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
