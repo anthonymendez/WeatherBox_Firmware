@@ -1,5 +1,5 @@
-Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.o: \
- ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.c \
+Drivers/ESP8266/esp8266.o: ../Drivers/ESP8266/esp8266.c \
+ ../Drivers/ESP8266/esp8266.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal.h \
  ../Core/Inc/stm32l0xx_hal_conf.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_rcc.h \
@@ -31,6 +31,8 @@ Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.o: \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_tim_ex.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart_ex.h
+
+../Drivers/ESP8266/esp8266.h:
 
 ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal.h:
 

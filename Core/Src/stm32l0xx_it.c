@@ -85,7 +85,6 @@ static uint16_t reverse(uint16_t);
 static float adc_to_voltage(uint16_t);
 static void calculate_wind_speed(uint16_t, uint16_t, float*, float*);
 void bme280_read_data_forced_mode(struct bme280_dev*);
-void transmitWifi(char *info);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -261,7 +260,7 @@ void TIM2_IRQHandler(void)
 				  bme280_pressure,
 				  bme280_humidity);
 
-  transmitWifi(data);
+  transmitWifi(data, huart1);
 
 //  /* Toggle SS1 Pin Low to select sensor */
     HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
@@ -344,46 +343,6 @@ static uint16_t reverse(uint16_t x)
 	}
 	return (uint16_t) y;
 }
-
-/**
- * TODO: Write function to write data to WiFi module
- */
-void transmitWifi(char* info)
-{
-
-	char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
-	HAL_UART_Transmit(&huart1, (uint8_t *) start, strlen(start), 500);
-	HAL_Delay(2000);
-	char send[] = "AT+CIPSEND=";
-	char ret[] = "\r\n";
-	char postFormat[] = "POST /map/data HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: weatherbox.azurewebsites.net\r\nContent-Type: application/json\r\nContent-Length: %i\r\n\r\n";
-	char post[sizeof(postFormat)];
-	int jsonsize = (int)(strlen(info));
-	char jsonStr[sizeof(jsonsize)];
-	sprintf(jsonStr, "%u", jsonsize);
-	sprintf(post, postFormat, jsonsize);
-	int postsize = (int)(strlen(post));
-	char postStr[sizeof(postsize)];
-	sprintf(postStr, "%u", postsize);
-
-
-	// Send Command with size of message
-	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *) postStr, strlen(postStr), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
-	HAL_Delay(1000);
-	
-	//Sending POST message
-	HAL_UART_Transmit(&huart1, (uint8_t *) post, strlen(post), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
-	HAL_Delay(2000);
-	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *) jsonStr, strlen(jsonStr), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *) info, strlen(info), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
-}
-
 
 /**
  * 	@brief Function handles converting adc value to a voltage.

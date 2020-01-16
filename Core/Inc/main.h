@@ -38,7 +38,7 @@ extern "C" {
 #include <time.h>
 #include "bme280.h"
 #include "string.h"
-#include "cJSON.h"
+#include "esp8266.h"
 
 /* USER CODE END Includes */
 
@@ -64,9 +64,6 @@ void Error_Handler(void);
 void user_delay_ms(uint32_t);
 int8_t user_i2c_read(uint8_t, uint8_t, uint8_t*, uint16_t);
 int8_t user_i2c_write(uint8_t, uint8_t, uint8_t*, uint16_t);
-void connectWifi();
-void wifiInit();
-void wifiRST();
 void wifi_get_timestamp();
 /* USER CODE END EFP */
 

@@ -146,12 +146,12 @@ int main(void)
   timestamp = mktime(&currTime);
 //  wifiRST();
   //HAL_Delay(1000);
-  wifiInit();
+  wifiInit(huart1);
   wifi_get_timestamp();
   HAL_Delay(1000);
   BME280_INIT();
   bme280_init_complete = 1;
-  connectWifi();
+  connectWifi("WeatherBox", "WinDrone807", huart1);
   //HAL_Delay(5000);
   HAL_TIM_Base_Start_IT(&htim2);
 
@@ -649,37 +649,7 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 	HAL_I2C_DeInit(&hi2c1);
 	return rslt;
 }
-void wifiRST()
-{
-	char rst[] = "AT+RST\r\n";
-	HAL_UART_Transmit(&huart1, (uint8_t *)rst, strlen(rst), 500);
-}
 
-void wifiInit()
-{
-	char set[] = "AT+CWMODE=1\r\n";
-	HAL_UART_Transmit(&huart1, (uint8_t *) set, strlen(set), 500);
-	HAL_Delay(5);
-
-	char uart_set[] = "AT+UART_CUR=115200,8,1,0,0\r\n";
-	HAL_UART_Transmit(&huart1, (uint8_t *) uart_set, strlen(uart_set), 500);
-	HAL_Delay(5);
-
-	char uart_set_def[] = "AT+UART_DEF=115200,8,1,0,0\r\n";
-	HAL_UART_Transmit(&huart1, (uint8_t *) uart_set_def, strlen(uart_set_def), 500);
-	HAL_Delay(5);
-
-	char recv_mode[] = "AT+CIPRECVMODE=1\r\n";
-	HAL_UART_Transmit(&huart1, (uint8_t *) recv_mode, strlen(recv_mode), 500);
-	HAL_Delay(5);
-}
-
-void connectWifi()
-{
-	char connect[] = "AT+CWJAP=\"WeatherBox\",\"WinDrone807\"\r\n";
-	HAL_UART_Transmit(&huart1, (uint8_t *) connect, strlen(connect), 500);
-	HAL_Delay(5);
-}
 
 void wifi_get_timestamp()
 {
