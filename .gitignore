@@ -43,4 +43,6 @@
 
 # Libraries
 /lib
-/Debug
+
+# Debug
+Debug/*
