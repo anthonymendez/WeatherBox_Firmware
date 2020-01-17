@@ -19,5 +19,6 @@ SUBDIRS := \
 Core/Src \
 Core/Startup \
 Drivers/BME280 \
+Drivers/ESP8266 \
 Drivers/STM32L0xx_HAL_Driver/Src \
 

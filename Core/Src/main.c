@@ -43,18 +43,26 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
+RTC_HandleTypeDef hrtc;
+
 SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim2;
 
-UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-int bme280_init_complete = 0;
+	/* Unique Device ID */
+uint32_t stm32_dev_id_word0;
+uint32_t stm32_dev_id_word1;
+uint32_t stm32_dev_id_word2;
 
+	/* Timeouts in milliseconds */
 const int SPI_TIMEOUT = 500;
 const int I2C_TIMEOUT = 500;
+
 	/* BME280 Variables */
+int bme280_init_complete = 0;
 struct bme280_settings bme280_device_settings;
 struct bme280_dev bme280_device;
 int8_t bme280_init_rslt = BME280_OK;
@@ -63,6 +71,9 @@ uint8_t bme280_settings_sel = BME280_OSR_PRESS_SEL | BME280_OSR_TEMP_SEL | BME28
 struct bme280_data comp_data;
 
 	/* CCS811 Variables */
+struct ccs811_fw_boot_version ccs811_firmware_boot_version;
+struct ccs811_fw_app_version ccs811_firmware_app_version;
+struct ccs811_ntc ccs811_ntc_data;
 struct ccs811_env_data ccs811_environmental_data;
 struct ccs811_measurement_data ccs811_measured_data;
 struct ccs811_dev ccs811_device;
@@ -70,6 +81,13 @@ uint16_t ccs811_baseline;
 int8_t ccs811_init_rslt = CCS811_OK;
 int8_t ccs811_rslt = CCS811_OK;
 int ccs811_init_complete = 0;
+
+	/* RTC Variables */
+RTC_TimeTypeDef currentTime;
+RTC_DateTypeDef currentDate;
+time_t timestamp;
+struct tm currTime;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -78,7 +96,8 @@ static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_USART2_UART_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_RTC_Init(void);
 static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 static void BME280_INIT(void);
@@ -107,6 +126,10 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  /* Get Unique Device ID */
+  stm32_dev_id_word0 = HAL_GetUIDw0();
+  stm32_dev_id_word1 = HAL_GetUIDw1();
+  stm32_dev_id_word2 = HAL_GetUIDw2();
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -120,16 +143,37 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM2_Init();
   MX_I2C1_Init();
-  MX_USART2_UART_Init();
+  MX_USART1_UART_Init();
+  MX_RTC_Init();
 
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
+  HAL_RTC_GetTime(&hrtc, &currentTime, RTC_FORMAT_BIN);
+  HAL_RTC_GetDate(&hrtc, &currentDate, RTC_FORMAT_BIN);
+
+  currTime.tm_year = currentDate.Year + 2019;  // In fact: 2000 + 18 - 1900
+  currTime.tm_mday = currentDate.Date;
+  currTime.tm_mon  = currentDate.Month;
+
+  currTime.tm_hour = currentTime.Hours;
+  currTime.tm_min  = currentTime.Minutes;
+  currTime.tm_sec  = currentTime.Seconds;
+
+  timestamp = mktime(&currTime);
+//  wifiRST();
+  //HAL_Delay(1000);
+  wifiInit(huart1);
+  wifi_get_timestamp();
+  HAL_Delay(1000);
   BME280_INIT();
   bme280_init_complete = 1;
   CCS811_INIT();
   ccs811_init_complete = 1;
+  connectWifi("WeatherBox", "WinDrone807", huart1);
+  //HAL_Delay(5000);
   HAL_TIM_Base_Start_IT(&htim2);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -159,7 +203,8 @@ void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_5;
@@ -181,9 +226,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_I2C1;
-  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1
+                              |RCC_PERIPHCLK_RTC;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -248,6 +295,69 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  RTC_TimeTypeDef sTime = {0};
+  RTC_DateTypeDef sDate = {0};
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+  /** Initialize RTC Only 
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* USER CODE BEGIN Check_RTC_BKUP */
+    
+  /* USER CODE END Check_RTC_BKUP */
+
+  /** Initialize RTC and set the Time and Date 
+  */
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sDate.WeekDay = RTC_WEEKDAY_SUNDAY;
+  sDate.Month = RTC_MONTH_DECEMBER;
+  sDate.Date = 1;
+  sDate.Year = 0;
+
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
+
+}
+
+/**
   * @brief SPI1 Initialization Function
   * @param None
   * @retval None
@@ -307,7 +417,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 7000;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 750;
+  htim2.Init.Period = 3000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -337,37 +447,37 @@ static void MX_TIM2_Init(void)
 }
 
 /**
-  * @brief USART2 Initialization Function
+  * @brief USART1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART2_UART_Init(void)
+static void MX_USART1_UART_Init(void)
 {
 
-  /* USER CODE BEGIN USART2_Init 0 */
-	HAL_UART_Init(&huart2);
-  /* USER CODE END USART2_Init 0 */
+  /* USER CODE BEGIN USART1_Init 0 */
 
-  /* USER CODE BEGIN USART2_Init 1 */
+  /* USER CODE END USART1_Init 0 */
 
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART2_Init 2 */
+  /* USER CODE BEGIN USART1_Init 2 */
 
-  /* USER CODE END USART2_Init 2 */
+  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -403,6 +513,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA2 PA3 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF4_USART2;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : User_LED_Pin */
   GPIO_InitStruct.Pin = User_LED_Pin;
@@ -456,12 +574,15 @@ static void BME280_INIT(void)
  */
 static void CCS811_INIT(void)
 {
-	ccs811_device.dev_addr = CCS811_I2C_ADDR_PRIM;
-	ccs811_device.measure_mode_reg = (uint8_t)(CCS811_DRIVE_MODE_CONSTANT_1s_MODE << 4);
+	ccs811_device.dev_addr = CCS811_I2C_ADDR_SEC;
+	ccs811_device.measure_mode_reg = (uint8_t)(CCS811_DRIVE_MODE_CONSTANT_1s_MODE);
 	ccs811_device.read = user_i2c_read;
 	ccs811_device.write = user_i2c_write;
 	ccs811_device.delay_ms = user_delay_ms;
 	ccs811_init_rslt |= ccs811_init(&ccs811_device);
+	ccs811_init_rslt |= ccs811_read_fw_boot_version(&ccs811_firmware_boot_version, &ccs811_device);
+	ccs811_init_rslt |= ccs811_read_fw_app_version(&ccs811_firmware_app_version, &ccs811_device);
+	ccs811_init_rslt |= ccs811_read_ntc(&ccs811_ntc_data, &ccs811_device);
 	ccs811_init_rslt |= ccs811_read_baseline_reg(&ccs811_baseline, &ccs811_device);
 }
 
@@ -521,13 +642,11 @@ int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
 	uint16_t read_mode = dev_id;
 	/* Check if our dev_id is already left shifted with a read bit */
-	if (dev_id == (uint8_t)(BME280_I2C_ADDR_PRIM) || dev_id == (uint8_t)(BME280_I2C_ADDR_SEC))
-	{
-		read_mode = (dev_id << 1) | 1;
-	}
+	read_mode = (dev_id << 1) | 1;
 	// Initing then Deiniting fixed I2C Busy Flag bug
 	HAL_I2C_Init(&hi2c1);
 	rslt |= HAL_I2C_Mem_Read(&hi2c1, read_mode, reg_addr, sizeof(uint8_t), reg_data, len, I2C_TIMEOUT);
+//	HAL_Delay(500);
 	HAL_I2C_DeInit(&hi2c1);
 	return rslt;
 }
@@ -558,15 +677,42 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
 	uint16_t write_mode = dev_id;
 	/* Check if our dev_id is already left shifted with a write bit */
-	if (dev_id == (uint8_t)(BME280_I2C_ADDR_PRIM) || dev_id == (uint8_t)(BME280_I2C_ADDR_SEC))
-	{
-		write_mode = (dev_id << 1) | 0;
-	}
+	write_mode = (dev_id << 1) | 0;
 	// Initing then Deiniting fixed I2C Busy Flag bug
 	HAL_I2C_Init(&hi2c1);
 	rslt = HAL_I2C_Mem_Write(&hi2c1, write_mode, reg_addr, sizeof(uint8_t), reg_data, len, I2C_TIMEOUT);
+//	HAL_Delay(500);
 	HAL_I2C_DeInit(&hi2c1);
 	return rslt;
+}
+
+
+void wifi_get_timestamp()
+{
+	char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
+	HAL_UART_Transmit(&huart1, (uint8_t *) start, strlen(start), 500);
+	HAL_Delay(2000);
+	char send[] = "AT+CIPSEND=";
+	char recv[] = "AT+CIPRECVDATA=1000\r\n";
+	char ret[] = "\r\n";
+	char get[] = "GET /timestamp HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: weatherbox.azurewebsites.net\r\n\r\n";
+	int get_size = (int)(strlen(get));
+	char get_str[sizeof(get_size)];
+	sprintf(get_str, "%u", get_size);
+	char *receiveBuffer0 = calloc(1000, sizeof(char));
+
+
+	// Send Command with size of message
+	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
+	HAL_UART_Transmit(&huart1, (uint8_t *) get_str, strlen(get_str), 500);
+	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
+	HAL_Delay(1000);
+
+	//Sending GET message
+	HAL_UART_Transmit(&huart1, (uint8_t *) get, strlen(get), 500);
+//	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
+//	HAL_UART_Transmit(&huart1, (uint8_t *) recv, strlen(recv), 500);
+	HAL_UART_Receive(&huart1, &receiveBuffer0, strlen(receiveBuffer0), 5000);
 }
 /* USER CODE END 4 */
 

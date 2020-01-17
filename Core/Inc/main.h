@@ -33,9 +33,14 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "bme280.h"
 #include "ccs811.h"
 #include "string.h"
+#include "esp8266.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -60,6 +65,7 @@ void Error_Handler(void);
 void user_delay_ms(uint32_t);
 int8_t user_i2c_read(uint8_t, uint8_t, uint8_t*, uint16_t);
 int8_t user_i2c_write(uint8_t, uint8_t, uint8_t*, uint16_t);
+void wifi_get_timestamp();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

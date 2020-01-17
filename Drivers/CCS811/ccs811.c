@@ -236,8 +236,9 @@ int8_t ccs811_set_regs(uint8_t *reg_addr, const uint8_t *reg_data, uint8_t len, 
 /*!
  *	@brief This API reads the data to the given register address of the sensor.
  */
-int8_t ccs811_read_regs(uint8_t *reg_addr, const uint8_t *reg_data, uint8_t len, const struct ccs811_dev *dev)
+int8_t ccs811_read_regs(uint8_t *reg_addr, uint8_t *reg_data, uint8_t len, const struct ccs811_dev *dev)
 {
+	int i;
 	int8_t rslt;
 	uint8_t temp_buff[len];
 
@@ -262,6 +263,11 @@ int8_t ccs811_read_regs(uint8_t *reg_addr, const uint8_t *reg_data, uint8_t len,
 	if (rslt != CCS811_OK)
 	{
 		rslt = CCS811_E_COMM_FAIL;
+	}
+
+	/* Set data from buffer into reg_data */
+	for(i = 0; i < len; i++) {
+		reg_data[i] = temp_buff[i];
 	}
 
 	return rslt;
@@ -294,6 +300,8 @@ int8_t ccs811_read_status_reg(struct ccs811_dev *dev)
 		rslt = CCS811_E_COMM_FAIL;
 	}
 
+	dev->status_reg = temp_buff[0];
+
 	return rslt;
 }
 
@@ -323,6 +331,8 @@ int8_t ccs811_read_meas_mode_reg(struct ccs811_dev *dev)
 	{
 		rslt = CCS811_E_COMM_FAIL;
 	}
+
+	dev->measure_mode_reg = temp_buff[0];
 
 	return rslt;
 }
@@ -910,7 +920,7 @@ int8_t ccs811_app_start(struct ccs811_dev *dev)
 	}
 
 	/* Set empty byte */
-	temp_buffer[0] = 0;
+	temp_buffer[0] = 1;
 
 	/* Set app start of device */
 	rslt = ccs811_set_regs(&slave_addr, temp_buffer, len, dev);

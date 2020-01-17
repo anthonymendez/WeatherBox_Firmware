@@ -95,9 +95,13 @@ void bme280_read_data_forced_mode(struct bme280_dev*);
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN EV */
+/* Unique Device ID */
+extern uint32_t stm32_dev_id_word0;
+extern uint32_t stm32_dev_id_word1;
+extern uint32_t stm32_dev_id_word2;
 extern SPI_HandleTypeDef hspi1;
 extern I2C_HandleTypeDef hi2c1;
-extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart1;
 extern int bme280_init_complete;
 extern struct bme280_settings bme280_device_settings;
 extern struct bme280_dev bme280_device;
@@ -208,13 +212,13 @@ void TIM2_IRQHandler(void)
   uint16_t din_ch5 = 0;
   uint16_t din_ch6 = 0;
   uint16_t din_ch7 = 0;
-  char wifi_data1[2];
-  char UARTsend[] = "AT\n";
   float bme280_pressure = 0;
   float bme280_temperature = 0;
   float bme280_humidity = 0;
   float md_wind_speed = 0;
   float md_temp = 0;
+  uint64_t timestamp = time(NULL);
+  char data[250];
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -257,8 +261,23 @@ void TIM2_IRQHandler(void)
   bme280_pressure = comp_data.pressure * 0.01; // hPa Pressure Units... for Debug Purposes
 
   /* Transmit over WiFi */
-  HAL_UART_Transmit(&huart2, (uint8_t *) UARTsend, strlen(UARTsend), 500);
-  HAL_UART_Receive(&huart2, (uint8_t *)wifi_data1, 2, 500);
+  sprintf(data, "{ \"system_id\":\"%lu%lu%lu\", "
+		  	  	  "\"timestamp\":\"-1\", "
+		  	  	  "\"temperature\":\"%f\", "
+		  	  	  "\"wind_speed\":\"%f\", "
+		  	  	  "\"pressure\":\"%f\", "
+		  	  	  "\"humidity\":\"%f\", "
+		  	  	  "\"air_quality\":\"%u\" }",
+				  stm32_dev_id_word0,
+				  stm32_dev_id_word1,
+				  stm32_dev_id_word2,
+				  bme280_temperature,
+				  md_wind_speed,
+				  bme280_pressure,
+				  bme280_humidity,
+				  ccs811_measured_data.eco2);
+
+  transmitWifi(data, huart1);
 
 //  /* Toggle SS1 Pin Low to select sensor */
     HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
@@ -343,13 +362,6 @@ static uint16_t reverse(uint16_t x)
 }
 
 /**
- * TODO: Write function to write data to WiFi module
- */
-
-
-
-
-/**
  * 	@brief Function handles converting adc value to a voltage.
  * 	Call reverse_and_shift_adc_value before hand.
  */
@@ -399,6 +411,11 @@ static void calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_adc
 	*wind_speed = (wind_speed_vout - zero_voltage) / (3.038517 * pow(*temp_amb, 0.115157));
 	*wind_speed /= 0.087288;
 	*wind_speed = pow(*wind_speed, 3.009364);
+
+	if (isnanf(*wind_speed))
+	{
+		*wind_speed = 0;
+	}
 }
 
 void bme280_read_data_forced_mode(struct bme280_dev *dev)

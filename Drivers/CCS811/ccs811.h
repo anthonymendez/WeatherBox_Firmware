@@ -52,7 +52,7 @@ int8_t ccs811_set_regs(uint8_t *reg_addr, const uint8_t *reg_data, uint8_t len, 
  *	@return Result of API execution status.
  *	@retval zero -> Success / + value -> Warning / - value -> Error
  */
-int8_t ccs811_read_regs(uint8_t *reg_addr, const uint8_t *reg_data, uint8_t len, const struct ccs811_dev *dev);
+int8_t ccs811_read_regs(uint8_t *reg_addr, uint8_t *reg_data, uint8_t len, const struct ccs811_dev *dev);
 
 /*!
  *	@brief This API reads the status register.

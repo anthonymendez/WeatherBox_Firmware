@@ -1,0 +1,4 @@
+esp8266.c:12:6:wifiRST	32	static
+esp8266.c:21:6:wifiInit	128	static
+esp8266.c:43:6:connectWifi	88	static
+esp8266.c:54:6:transmitWifi	384	static
