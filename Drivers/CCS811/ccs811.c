@@ -99,6 +99,13 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 
 		if (rslt == CCS811_OK)
 		{
+			if (dev->status_reg & CCS811_STATUS_ERROR_MSK)
+			{
+				ccs811_read_error_id(dev);
+				rslt = CCS811_E_STATUS_REG_ERROR;
+				return rslt;
+			}
+
 			if (dev->status_reg & CCS811_STATUS_APP_VALID_MSK)
 			{
 				break;
@@ -154,6 +161,13 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 
 		if (rslt == CCS811_OK)
 		{
+			if (dev->status_reg & CCS811_STATUS_ERROR_MSK)
+			{
+				ccs811_read_error_id(dev);
+				rslt = CCS811_E_STATUS_REG_ERROR;
+				return rslt;
+			}
+
 			if (dev->status_reg & CCS811_STATUS_FW_MODE_MSK)
 			{
 				break;
@@ -204,14 +218,17 @@ int8_t ccs811_init(struct ccs811_dev *dev)
  */
 int8_t ccs811_set_regs(uint8_t *reg_addr, const uint8_t *reg_data, uint8_t len, const struct ccs811_dev *dev)
 {
+	int i;
 	int8_t rslt;
 	uint8_t temp_buff[len];
 
 	/* Check for null pointers in device structure */
 	rslt = null_ptr_check(dev);
 
-	/* Check for invalid length */
-	if (len == 0)
+	/* Check for invalid length
+	 * If reg_data is also 0, then we're just setting up a write
+	 */
+	if (len == 0 && reg_data != 0)
 	{
 		rslt = CCS811_E_INVALID_LEN;
 	}
@@ -220,6 +237,12 @@ int8_t ccs811_set_regs(uint8_t *reg_addr, const uint8_t *reg_data, uint8_t len, 
 	{
 		return rslt;
 	}
+
+	/* Set data from reg_data into buffer */
+	for(i = 0; i < len; i++) {
+		temp_buff[i] = reg_data[i];
+	}
+
 
 	/* Write to registers */
 	rslt = dev->write(dev->dev_addr, reg_addr[0], temp_buff, len);
@@ -909,7 +932,6 @@ int8_t ccs811_app_start(struct ccs811_dev *dev)
 	int rslt;
 	uint8_t slave_addr = (uint8_t)(CCS811_APP_START_ADDR);
 	uint8_t len = (uint8_t)(CCS811_APP_START_BYTE_LEN);
-	uint8_t temp_buffer[len];
 
 	/* Check for null pointers in device structure */
 	rslt = null_ptr_check(dev);
@@ -919,11 +941,8 @@ int8_t ccs811_app_start(struct ccs811_dev *dev)
 		return rslt;
 	}
 
-	/* Set empty byte */
-	temp_buffer[0] = 1;
-
 	/* Set app start of device */
-	rslt = ccs811_set_regs(&slave_addr, temp_buffer, len, dev);
+	rslt = ccs811_set_regs(&slave_addr, 0, len, dev);
 
 	/* Check for communication error */
 	if (rslt != CCS811_OK)

@@ -71,6 +71,7 @@
 #define CCS811_E_COMM_FAIL                INT8_C(-4)
 #define CCS811_E_SLEEP_MODE_FAIL          INT8_C(-5)
 #define CCS811_E_NVM_COPY_FAILED          INT8_C(-6)
+#define CCS811_E_STATUS_REG_ERROR         INT8_C(-7)
 
 /**\name Register Address */
 #define CCS811_STATUS_ADDR               UINT8_C(0x00)
