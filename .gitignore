@@ -45,4 +45,4 @@
 /lib
 
 # Debug
-Debug/*
+.Debug/*
