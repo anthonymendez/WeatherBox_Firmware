@@ -506,7 +506,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(SS1_GPIO_Port, SS1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SS2_Pin|GPIO_PIN_13, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, SS2_Pin|GPIO_PIN_13|CCS811_RST_Pin|CCS811_WAKE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -536,8 +536,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SS2_Pin PB13 */
-  GPIO_InitStruct.Pin = SS2_Pin|GPIO_PIN_13;
+  /*Configure GPIO pins : SS2_Pin PB13 CCS811_RST_Pin CCS811_WAKE_Pin */
+  GPIO_InitStruct.Pin = SS2_Pin|GPIO_PIN_13|CCS811_RST_Pin|CCS811_WAKE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -579,6 +579,10 @@ static void CCS811_INIT(void)
 	ccs811_device.read = user_i2c_read;
 	ccs811_device.write = user_i2c_write;
 	ccs811_device.delay_ms = user_delay_ms;
+	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(CCS811_RST_GPIO_Port, CCS811_RST_Pin, GPIO_PIN_SET);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(CCS811_RST_GPIO_Port, CCS811_RST_Pin, GPIO_PIN_RESET);
 	ccs811_init_rslt |= ccs811_init(&ccs811_device);
 	ccs811_init_rslt |= ccs811_read_fw_boot_version(&ccs811_firmware_boot_version, &ccs811_device);
 	ccs811_init_rslt |= ccs811_read_fw_app_version(&ccs811_firmware_app_version, &ccs811_device);
@@ -596,6 +600,9 @@ void user_delay_ms(uint32_t milliseconds)
 {
 	HAL_Delay(milliseconds);
 }
+
+/* TODO: Create wrapper function for CCS811 reading and writing set Wake pin low (get device out of sleep mode)*/
+/* TODO: Figure out why we get a error code of 3 (0b11) */
 
 /*
  *	@brief Function Pointer for reading data from the BME280 or CCS811 using the I2C protocol.

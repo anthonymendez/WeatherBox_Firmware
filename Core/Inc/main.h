@@ -93,6 +93,10 @@ void wifi_get_timestamp();
 #define TCK_GPIO_Port GPIOA
 #define SPI1_SCK_Pin GPIO_PIN_3
 #define SPI1_SCK_GPIO_Port GPIOB
+#define CCS811_RST_Pin GPIO_PIN_4
+#define CCS811_RST_GPIO_Port GPIOB
+#define CCS811_WAKE_Pin GPIO_PIN_5
+#define CCS811_WAKE_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -62,16 +62,16 @@
 #define CCS811_I2C_ADDR_SEC     UINT8_C(0x5B)
 
 /**\name API success code */
-#define CCS811_OK                         INT8_C(0)
+#define CCS811_OK                        INT8_C(0)
 
 /**\name API error codes */
-#define CCS811_E_NULL_PTR                 INT8_C(-1)
-#define CCS811_E_DEV_NOT_FOUND            INT8_C(-2)
-#define CCS811_E_INVALID_LEN              INT8_C(-3)
-#define CCS811_E_COMM_FAIL                INT8_C(-4)
-#define CCS811_E_SLEEP_MODE_FAIL          INT8_C(-5)
-#define CCS811_E_NVM_COPY_FAILED          INT8_C(-6)
-#define CCS811_E_STATUS_REG_ERROR         INT8_C(-7)
+#define CCS811_E_NULL_PTR                INT8_C(0b1 << 0)
+#define CCS811_E_DEV_NOT_FOUND           INT8_C(0b1 << 1)
+#define CCS811_E_INVALID_LEN             INT8_C(0b1 << 2)
+#define CCS811_E_COMM_FAIL               INT8_C(0b1 << 3)
+#define CCS811_E_SLEEP_MODE_FAIL         INT8_C(0b1 << 4)
+#define CCS811_E_NVM_COPY_FAILED         INT8_C(0b1 << 5)
+#define CCS811_E_STATUS_REG_ERROR        INT8_C(0b1 << 6)
 
 /**\name Register Address */
 #define CCS811_STATUS_ADDR               UINT8_C(0x00)
