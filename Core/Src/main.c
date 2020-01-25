@@ -579,6 +579,7 @@ static void CCS811_INIT(void)
 	ccs811_device.read = ccs811_read;
 	ccs811_device.write = ccs811_write;
 	ccs811_device.delay_ms = user_delay_ms;
+	//TODO: Figure out why, when the pins are disconnected, comms w/ CCS811 doesn't work
 	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(CCS811_RST_GPIO_Port, CCS811_RST_Pin, GPIO_PIN_SET);
 	HAL_Delay(10);
