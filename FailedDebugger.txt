@@ -1,0 +1,66 @@
+STMicroelectronics ST-LINK GDB server. Version 5.3.2
+Copyright (c) 2019, STMicroelectronics. All rights reserved.
+
+Starting server with the following options:
+        Persistent Mode            : Disabled
+        Logging Level              : 1
+        Listen Port Number         : 61234
+        Status Refresh Delay       : 15s
+        Verbose Mode               : Disabled
+        SWD Debug                  : Enabled
+
+Waiting for debugger connection...
+Debugger connected
+      -------------------------------------------------------------------
+                       STM32CubeProgrammer v2.2.0                  
+      -------------------------------------------------------------------
+
+
+
+Log output file:   C:\Users\sdp\AppData\Local\Temp\STM32CubeProgrammer_a02580.log
+ST-LINK SN  : 066EFF515055657867152157
+ST-LINK FW  : V2J34M25
+Voltage     : 3.25V
+SWD freq    : 4000 KHz
+Connect mode: Under Reset
+Reset mode  : Hardware reset
+Device ID   : 0x447
+Device name : STM32L07x/L08x/L010
+Flash size  : 192 KBytes
+Device type : MCU
+Device CPU  : Cortex-M0+
+
+
+
+Memory Programming ...
+Opening and parsing file: ST-LINK_GDB_server_a02580.srec
+  File          : ST-LINK_GDB_server_a02580.srec
+  Size          : 67592 Bytes
+  Address       : 0x08000000 
+
+
+Erasing memory corresponding to segment 0:
+Erasing internal memory sectors [0 528]
+Download in Progress:
+
+
+File download complete
+Time elapsed during download operation: 00:00:07.216
+
+
+
+Verifying ...
+
+
+
+
+Error: Data mismatch found at address  0x08010801 (byte = 0x50 instead of 0x00)
+
+
+Error: Download verification failed
+
+
+Encountered Error when opening C:\ST\STM32CubeIDE_1.1.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.cubeprogrammer.win32_1.1.0.201910081157\tools\bin\STM32_Programmer_CLI.exe
+Error in STM32CubeProgrammer
+Debugger connection lost.
+Shutting down...

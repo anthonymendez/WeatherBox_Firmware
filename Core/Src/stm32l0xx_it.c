@@ -82,8 +82,8 @@ void Toggle_ADC_Chip_Select();
 void HAL_SPI_Transmit_Start();
 void Read_ADC(uint8_t, uint16_t*);
 static uint16_t reverse(uint16_t);
-static float adc_to_voltage(uint16_t);
-static void calculate_wind_speed(uint16_t, uint16_t, float*, float*);
+static float adc_to_voltage(uint32_t);
+static void calculate_wind_speed(uint32_t, uint32_t, float*, float*);
 void bme280_read_data_forced_mode(struct bme280_dev*);
 /* USER CODE END PFP */
 
@@ -99,6 +99,7 @@ extern TIM_HandleTypeDef htim2;
 extern uint32_t stm32_dev_id_word0;
 extern uint32_t stm32_dev_id_word1;
 extern uint32_t stm32_dev_id_word2;
+extern ADC_HandleTypeDef hadc;
 extern SPI_HandleTypeDef hspi1;
 extern I2C_HandleTypeDef hi2c1;
 extern UART_HandleTypeDef huart1;
@@ -204,14 +205,8 @@ void SysTick_Handler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
-  uint16_t wind_speed_digital = 0;
-  uint16_t wind_temp_digital = 0;
-  uint16_t din_ch2 = 0;
-  uint16_t din_ch3 = 0;
-  uint16_t din_ch4 = 0;
-  uint16_t din_ch5 = 0;
-  uint16_t din_ch6 = 0;
-  uint16_t din_ch7 = 0;
+  uint32_t wind_speed_adc = 0;
+  uint32_t wind_temp_adc = 0;
   float bme280_pressure = 0;
   float bme280_temperature = 0;
   float bme280_humidity = 0;
@@ -229,18 +224,13 @@ void TIM2_IRQHandler(void)
 	  return;
   }
 
-  /* Read ADC Wind Speed Sensor Channel */
-  Read_ADC((uint8_t) ADC_WIND_SENSOR_SPEED_CH, &wind_speed_digital);
-
-  /* Read ADC Wind Temp Sensor Channel */
-  Read_ADC((uint8_t) ADC_WIND_SENSOR_TEMP_CH, &wind_temp_digital);
-
-  Read_ADC((uint8_t) ADC_DIN_CH2, &din_ch2);
-  Read_ADC((uint8_t) ADC_DIN_CH3, &din_ch3);
-  Read_ADC((uint8_t) ADC_DIN_CH4, &din_ch4);
-  Read_ADC((uint8_t) ADC_DIN_CH5, &din_ch5);
-  Read_ADC((uint8_t) ADC_DIN_CH6, &din_ch6);
-  Read_ADC((uint8_t) ADC_DIN_CH7, &din_ch7);
+  HAL_ADC_Start(&hadc);
+  if(HAL_ADC_PollForConversion(&hadc, 500)== HAL_OK)
+	  wind_speed_adc = HAL_ADC_GetValue(&hadc);
+  HAL_ADC_Start(&hadc);
+  if(HAL_ADC_PollForConversion(&hadc, 500)== HAL_OK)
+  	  wind_temp_adc = HAL_ADC_GetValue(&hadc);
+  HAL_ADC_Stop(&hadc);
 
   /* Data is output to comp_data */
   bme280_read_data_forced_mode(&bme280_device);
@@ -268,7 +258,7 @@ void TIM2_IRQHandler(void)
 
   /* Calculations Done Here */
   // TODO: Double check later if this is properly compensated
-  calculate_wind_speed(wind_speed_digital, wind_temp_digital, &md_wind_speed, &md_temp);
+  calculate_wind_speed(wind_speed_adc, wind_temp_adc, &md_wind_speed, &md_temp);
   bme280_temperature = comp_data.temperature * 0.01; // Celsius
   bme280_humidity = comp_data.humidity / 1024.0; // Output is in percentage... so 43.33 is 43.33 %rH
   bme280_pressure = comp_data.pressure * 0.01; // hPa Pressure Units... for Debug Purposes
@@ -379,9 +369,9 @@ static uint16_t reverse(uint16_t x)
  * 	@brief Function handles converting adc value to a voltage.
  * 	Call reverse_and_shift_adc_value before hand.
  */
-static float adc_to_voltage(uint16_t adc_value)
+static float adc_to_voltage(uint32_t adc_value)
 {
-	return 5.0 * adc_value / 1024;;
+	return 3.3 * adc_value / 4096;
 }
 
 /**
@@ -406,7 +396,7 @@ static float adc_to_voltage(uint16_t adc_value)
  *	TODO: Use the Bosch sensor for ambiant temperature instead of the onboard Modern Device Sensor
  * 	https://moderndevice.com/uncategorized/calibrating-rev-p-wind-sensor-new-regression/?preview=true
  */
-static void calculate_wind_speed(uint16_t wind_speed_adc, uint16_t wind_temp_adc, float *wind_speed, float *temp_amb)
+static void calculate_wind_speed(uint32_t wind_speed_adc, uint32_t wind_temp_adc, float *wind_speed, float *temp_amb)
 {
 	// Calculate Vin from ADC
 	float wind_speed_vout = adc_to_voltage(wind_speed_adc);
