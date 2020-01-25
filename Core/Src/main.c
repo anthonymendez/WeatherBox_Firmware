@@ -576,18 +576,56 @@ static void CCS811_INIT(void)
 {
 	ccs811_device.dev_addr = CCS811_I2C_ADDR_SEC;
 	ccs811_device.measure_mode_reg = (uint8_t)(CCS811_DRIVE_MODE_CONSTANT_1s_MODE);
-	ccs811_device.read = user_i2c_read;
-	ccs811_device.write = user_i2c_write;
+	ccs811_device.read = ccs811_read;
+	ccs811_device.write = ccs811_write;
 	ccs811_device.delay_ms = user_delay_ms;
 	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(CCS811_RST_GPIO_Port, CCS811_RST_Pin, GPIO_PIN_SET);
 	HAL_Delay(10);
 	HAL_GPIO_WritePin(CCS811_RST_GPIO_Port, CCS811_RST_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_SET);
 	ccs811_init_rslt |= ccs811_init(&ccs811_device);
 	ccs811_init_rslt |= ccs811_read_fw_boot_version(&ccs811_firmware_boot_version, &ccs811_device);
 	ccs811_init_rslt |= ccs811_read_fw_app_version(&ccs811_firmware_app_version, &ccs811_device);
 	ccs811_init_rslt |= ccs811_read_ntc(&ccs811_ntc_data, &ccs811_device);
 	ccs811_init_rslt |= ccs811_read_baseline_reg(&ccs811_baseline, &ccs811_device);
+}
+
+/**
+ *	CCS811 Read Wrapper Function
+ *	Wraps user_i2c_read
+ */
+int8_t ccs811_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
+{
+	/* Remove device from sleep mode */
+	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+
+	int8_t rslt = user_i2c_read(dev_id, reg_addr, reg_data, len);
+
+	/* Put device into sleep mode */
+	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_SET);
+
+	return rslt;
+}
+
+/**
+ *	CCS811 Write Wrapper Function
+ *	Wraps user_i2c_write
+ */
+int8_t ccs811_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
+{
+	/* Remove device from sleep mode */
+	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+
+	int8_t rslt = user_i2c_write(dev_id, reg_addr, reg_data, len);
+
+	/* Put device into sleep mode */
+	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_SET);
+
+	return rslt;
 }
 
 /*
@@ -601,8 +639,7 @@ void user_delay_ms(uint32_t milliseconds)
 	HAL_Delay(milliseconds);
 }
 
-/* TODO: Create wrapper function for CCS811 reading and writing set Wake pin low (get device out of sleep mode)*/
-/* TODO: Figure out why we get a error code of 3 (0b11) */
+/* TODO: Figure out why we get a error code of 3 (0b11) CCS811 */
 
 /*
  *	@brief Function Pointer for reading data from the BME280 or CCS811 using the I2C protocol.
@@ -613,20 +650,6 @@ void user_delay_ms(uint32_t milliseconds)
  *
  *************************************************************
  *
- *  		BME280
- * 	Data readout is done by starting a burst read from 0xF7 to 0xFC (temperature and pressure)
- * 	or from 0xF7 to 0xFE (temperature, pressure and humidity). The data are read out in an unsigned
- * 	20-bit format both for pressure and for temperature and in an unsigned 16-bit format for humidity.
- *  Addr - Reg Name		- Size
- *	0xF7 - Pressure_MSB - 8 bits - Bits[19:12]
- *	0xF8 - Pressure_LSB - 8 bits - Bits[11:4]
- *	0xF9 - Pressure_XLSB - 8 bits - Bits[3:0]
- *	0xFA - Temperature_MSB - 8 bits - Bits[19:12]
- *	0xFB - Temperature_LSB - 8 bits - Bits[11:4]
- *	0xFC - Temperature_XLSB - 8 bits - Bits[3:0]
- *	0xFD - Humidity_MSB - 8 bits - Bits[15:8]
- *	0xFE - Humidity_LSB - 8 bits - Bits[7:0]
- *	See BME280 Datasheet Page 27 for more info
  */
 int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
 {
@@ -645,7 +668,6 @@ int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16
 	 * | Stop       | -                   |
 	 * |------------+---------------------|
 	 */
-	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
 	uint16_t read_mode = dev_id;
 	/* Check if our dev_id is already left shifted with a read bit */
@@ -653,7 +675,7 @@ int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16
 	// Initing then Deiniting fixed I2C Busy Flag bug
 	HAL_I2C_Init(&hi2c1);
 	rslt |= HAL_I2C_Mem_Read(&hi2c1, read_mode, reg_addr, sizeof(uint8_t), reg_data, len, I2C_TIMEOUT);
-//	HAL_Delay(500);
+	HAL_Delay(500);
 	HAL_I2C_DeInit(&hi2c1);
 	return rslt;
 }
@@ -688,7 +710,7 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 	// Initing then Deiniting fixed I2C Busy Flag bug
 	HAL_I2C_Init(&hi2c1);
 	rslt = HAL_I2C_Mem_Write(&hi2c1, write_mode, reg_addr, sizeof(uint8_t), reg_data, len, I2C_TIMEOUT);
-//	HAL_Delay(500);
+	HAL_Delay(500);
 	HAL_I2C_DeInit(&hi2c1);
 	return rslt;
 }
