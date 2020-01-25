@@ -245,6 +245,7 @@ void TIM2_IRQHandler(void)
   /* Data is output to comp_data */
   bme280_read_data_forced_mode(&bme280_device);
 
+  /*TODO: CCS811 measured data doesn't seem right. */
   ccs811_rslt = CCS811_OK;
   /* Format Environmental Data Struct */
   ccs811_rslt |= ccs811_convert_temp_and_humid_to_env_data(comp_data.humidity, comp_data.temperature, &ccs811_environmental_data);

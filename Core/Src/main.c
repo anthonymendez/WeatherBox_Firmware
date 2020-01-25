@@ -580,6 +580,7 @@ static void CCS811_INIT(void)
 	ccs811_device.write = ccs811_write;
 	ccs811_device.delay_ms = user_delay_ms;
 	//TODO: Figure out why, when the pins are disconnected, comms w/ CCS811 doesn't work
+	//IMPORTANT! KEEP DISCONNECTED FOR NOW!
 	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(CCS811_RST_GPIO_Port, CCS811_RST_Pin, GPIO_PIN_SET);
 	HAL_Delay(10);
@@ -703,7 +704,6 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 	 * | Stop       | -                   |
 	 * |------------+---------------------|
 	 */
-	//TODO: Verify this is correct
 	int8_t rslt = 0; /* Return 0 for Success, non-zero for failure */
 	uint16_t write_mode = dev_id;
 	/* Check if our dev_id is already left shifted with a write bit */
