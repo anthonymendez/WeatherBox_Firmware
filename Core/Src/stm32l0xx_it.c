@@ -247,12 +247,24 @@ void TIM2_IRQHandler(void)
 
   /*TODO: CCS811 measured data doesn't seem right. */
   ccs811_rslt = CCS811_OK;
+  ccs811_rslt |= ccs811_read_status_reg(&ccs811_device);
   /* Format Environmental Data Struct */
   ccs811_rslt |= ccs811_convert_temp_and_humid_to_env_data(comp_data.humidity, comp_data.temperature, &ccs811_environmental_data);
   /* Set Environmental Data for CCS811 */
   ccs811_rslt |= ccs811_set_env_data(&ccs811_environmental_data, &ccs811_device);
-  /* Read Algorithm Results from CCS811 */
-  ccs811_rslt |= ccs811_read_alg_result_data(&ccs811_measured_data, &ccs811_device);
+  /* Wait for data to be ready to read*/
+  if (ccs811_device.status_reg & CCS811_STATUS_DATA_READY_MSK)
+  {
+	  /* Read Algorithm Results from CCS811 */
+	  ccs811_rslt |= ccs811_read_alg_result_data(&ccs811_measured_data, &ccs811_device);
+  }
+  else
+  {
+	  ccs811_measured_data.eco2 = -1;
+	  ccs811_measured_data.error_id = 0;
+	  ccs811_measured_data.raw_data = -1;
+	  ccs811_measured_data.tvoc = -1;
+  }
 
   /* Calculations Done Here */
   // TODO: Double check later if this is properly compensated
@@ -262,6 +274,7 @@ void TIM2_IRQHandler(void)
   bme280_pressure = comp_data.pressure * 0.01; // hPa Pressure Units... for Debug Purposes
 
   /* Transmit over WiFi */
+  /* TODO: Wait 20 min at startup for CCS811 burnin */
   sprintf(data, "{ \"system_id\":\"%lu%lu%lu\", "
 		  	  	  "\"timestamp\":\"-1\", "
 		  	  	  "\"temperature\":\"%f\", "

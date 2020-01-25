@@ -587,6 +587,10 @@ static void CCS811_INIT(void)
 	HAL_GPIO_WritePin(CCS811_RST_GPIO_Port, CCS811_RST_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_SET);
+	ccs811_device.hw_id = 0;
+	ccs811_device.hw_version = 0;
+	ccs811_device.status_reg = 0;
+	ccs811_device.error_reg = 0;
 	ccs811_init_rslt |= ccs811_init(&ccs811_device);
 	ccs811_init_rslt |= ccs811_read_fw_boot_version(&ccs811_firmware_boot_version, &ccs811_device);
 	ccs811_init_rslt |= ccs811_read_fw_app_version(&ccs811_firmware_app_version, &ccs811_device);
