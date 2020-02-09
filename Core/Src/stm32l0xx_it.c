@@ -207,6 +207,8 @@ void TIM2_IRQHandler(void)
   /* USER CODE BEGIN TIM2_IRQn 0 */
   uint32_t wind_speed_adc = 0;
   uint32_t wind_temp_adc = 0;
+  uint32_t dust_adc = 0;
+  float dust_V = 0;
   float bme280_pressure = 0;
   float bme280_temperature = 0;
   float bme280_humidity = 0;
@@ -230,8 +232,14 @@ void TIM2_IRQHandler(void)
   HAL_ADC_Start(&hadc);
   if(HAL_ADC_PollForConversion(&hadc, 500)== HAL_OK)
   	  wind_temp_adc = HAL_ADC_GetValue(&hadc);
-  HAL_ADC_Stop(&hadc);
 
+  HAL_GPIO_TogglePin(GPIOB, Dust_LED_Pin);
+  HAL_ADC_Start(&hadc);
+  if(HAL_ADC_PollForConversion(&hadc, 500)== HAL_OK)
+  	  dust_adc = HAL_ADC_GetValue(&hadc);
+  HAL_ADC_Stop(&hadc);
+  HAL_GPIO_TogglePin(GPIOB, Dust_LED_Pin);
+  dust_V = adc_to_voltage(dust_adc);
   /* Data is output to comp_data */
   bme280_read_data_forced_mode(&bme280_device);
 
@@ -333,6 +341,7 @@ void Read_ADC(uint8_t adc_ch_select, uint16_t *output)
 {
 	uint8_t adc_byte_1 = 0;
 	uint8_t adc_byte_2 = 0;
+
 	/* Set output to 0 */
 	*output = 0;
 

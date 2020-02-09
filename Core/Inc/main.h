@@ -89,6 +89,8 @@ void wifi_get_timestamp();
 #define SS1_GPIO_Port GPIOC
 #define SS2_Pin GPIO_PIN_0
 #define SS2_GPIO_Port GPIOB
+#define Dust_LED_Pin GPIO_PIN_13
+#define Dust_LED_GPIO_Port GPIOB
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
