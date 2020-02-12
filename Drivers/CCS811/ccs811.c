@@ -314,6 +314,9 @@ int8_t ccs811_read_status_reg(struct ccs811_dev *dev)
 		return rslt;
 	}
 
+	/* Reset Status Reg */
+	dev->status_reg = 0;
+
 	/* Read from status register */
 	rslt = ccs811_read_regs(&slave_addr, temp_buff, len, dev);
 
@@ -345,6 +348,9 @@ int8_t ccs811_read_meas_mode_reg(struct ccs811_dev *dev)
 	{
 		return rslt;
 	}
+
+	/* Set measurement mode register to 0 */
+	dev->measure_mode_reg = 0;
 
 	/* Read from measure mode register */
 	rslt = ccs811_read_regs(&slave_addr, temp_buff, len, dev);
@@ -407,6 +413,13 @@ int8_t ccs811_read_alg_result_data(struct ccs811_measurement_data *meas_data, st
 		return rslt;
 	}
 
+	/* Reset measurement data */
+	meas_data->eco2 = 0;
+	meas_data->tvoc = 0;
+	meas_data->status = 0;
+	meas_data->error_id = 0;
+	meas_data->raw_data = 0;
+
 	/* Read from algorithm results register into temp buffer */
 	rslt = ccs811_read_regs(&slave_addr, temp_buffer, len, dev);
 
@@ -444,6 +457,10 @@ int8_t ccs811_read_raw_data(struct ccs811_raw_data *raw_data, struct ccs811_dev 
 	{
 		return rslt;
 	}
+
+	/* Set raw data to zero */
+	raw_data->current_through_sensor = 0;
+	raw_data->raw_adc_reading = 0;
 
 	/* Read from raw data results register */
 	rslt = ccs811_read_regs(&slave_addr, temp_buffer, len, dev);
@@ -518,6 +535,10 @@ int8_t ccs811_read_ntc(struct ccs811_ntc *ntc, struct ccs811_dev *dev)
 		return rslt;
 	}
 
+	/* Set NTC data to zero*/
+	ntc->v_ref_mv = 0;
+	ntc->v_ntc_mv = 0;
+
 	/* Read from the ntc results register */
 	rslt = ccs811_read_regs(&slave_addr, temp_buffer, len, dev);
 
@@ -588,6 +609,9 @@ int8_t ccs811_read_baseline_reg(uint16_t *baseline, struct ccs811_dev *dev)
 		return rslt;
 	}
 
+	/* Set baseline register to 0 */
+	*baseline = 0;
+
 	/* Read baseline register from the device */
 	rslt = ccs811_read_regs(&slave_addr, temp_buffer, len, dev);
 
@@ -653,6 +677,9 @@ int8_t ccs811_read_hw_id(struct ccs811_dev *dev)
 		return rslt;
 	}
 
+	/* Set HWID to 0 */
+	dev->hw_id = 0;
+
 	/* Read hardware register from the device */
 	rslt = ccs811_read_regs(&slave_addr, temp_buffer, len, dev);
 
@@ -692,6 +719,9 @@ int8_t ccs811_read_hw_version(struct ccs811_dev *dev)
 	{
 		return rslt;
 	}
+
+	/* Set Hardware Version to 0 */
+	dev->hw_version = 0;
 
 	/* Read hardware version from the device */
 	rslt = ccs811_read_regs(&slave_addr, temp_buffer, len, dev);
@@ -734,6 +764,11 @@ int8_t ccs811_read_fw_boot_version(struct ccs811_fw_boot_version *fw_boot_versio
 		return rslt;
 	}
 
+	/* Set FW Boot Version to 0 */
+	fw_boot_version->major = 0;
+	fw_boot_version->minor = 0;
+	fw_boot_version->trivial = 0;
+
 	/* Read Firmware Boot Version from the device */
 	rslt = ccs811_read_regs(&slave_addr, temp_buffer, len, dev);
 
@@ -771,6 +806,11 @@ int8_t ccs811_read_fw_app_version(struct ccs811_fw_app_version *fw_app_version, 
 		return rslt;
 	}
 
+	/* Set Firmware App Version to 0 */
+	fw_app_version->major = 0;
+	fw_app_version->minor = 0;
+	fw_app_version->trivial = 0;
+
 	/* Read Firmware App Version from the device */
 	rslt = ccs811_read_regs(&slave_addr, temp_buffer, len, dev);
 
@@ -807,6 +847,9 @@ int8_t ccs811_read_error_id(struct ccs811_dev *dev)
 	{
 		return rslt;
 	}
+
+	/* Setting error reg to 0 */
+	dev->error_reg = 0;
 
 	/* Read error id from the device */
 	rslt = ccs811_read_regs(&slave_addr, temp_buffer, len, dev);
