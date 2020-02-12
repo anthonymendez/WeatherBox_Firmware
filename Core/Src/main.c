@@ -645,21 +645,29 @@ static void CCS811_INIT(void)
 	ccs811_device.delay_ms = user_delay_ms;
 	//TODO: Figure out why, when the pins are disconnected, comms w/ CCS811 doesn't work
 	//IMPORTANT! KEEP DISCONNECTED FOR NOW!
-	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(CCS811_RST_GPIO_Port, CCS811_RST_Pin, GPIO_PIN_RESET);
+	HAL_Delay(10);
 	HAL_GPIO_WritePin(CCS811_RST_GPIO_Port, CCS811_RST_Pin, GPIO_PIN_SET);
 	HAL_Delay(10);
-	HAL_GPIO_WritePin(CCS811_RST_GPIO_Port, CCS811_RST_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
+	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_RESET);
+	HAL_Delay(10);
 	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_SET);
+	HAL_Delay(10);
 	ccs811_device.hw_id = 0;
 	ccs811_device.hw_version = 0;
 	ccs811_device.status_reg = 0;
 	ccs811_device.error_reg = 0;
 	ccs811_init_rslt |= ccs811_init(&ccs811_device);
 	ccs811_init_rslt |= ccs811_read_fw_boot_version(&ccs811_firmware_boot_version, &ccs811_device);
+	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
 	ccs811_init_rslt |= ccs811_read_fw_app_version(&ccs811_firmware_app_version, &ccs811_device);
-	ccs811_init_rslt |= ccs811_read_ntc(&ccs811_ntc_data, &ccs811_device);
-	ccs811_init_rslt |= ccs811_read_baseline_reg(&ccs811_baseline, &ccs811_device);
+	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
+	// TODO: Figure out why reading NTC or Baseline causes status error
+//	ccs811_init_rslt |= ccs811_read_ntc(&ccs811_ntc_data, &ccs811_device);
+//	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
+//	ccs811_init_rslt |= ccs811_read_baseline_reg(&ccs811_baseline, &ccs811_device);
+//	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
+	// TODO: Check App Start and see if it works or not
 }
 
 /**
@@ -670,7 +678,7 @@ int8_t ccs811_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t
 {
 	/* Remove device from sleep mode */
 	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
+	HAL_Delay(100);
 
 	int8_t rslt = user_i2c_read(dev_id, reg_addr, reg_data, len);
 
@@ -688,7 +696,7 @@ int8_t ccs811_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_
 {
 	/* Remove device from sleep mode */
 	HAL_GPIO_WritePin(CCS811_WAKE_GPIO_Port, CCS811_WAKE_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
+	HAL_Delay(100);
 
 	int8_t rslt = user_i2c_write(dev_id, reg_addr, reg_data, len);
 
