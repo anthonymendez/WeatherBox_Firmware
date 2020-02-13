@@ -88,6 +88,7 @@ int ccs811_init_complete = 0;
 	/* RTC Variables */
 RTC_TimeTypeDef currentTime;
 RTC_DateTypeDef currentDate;
+time_t timestamp_power_on;
 time_t timestamp;
 struct tm currTime;
 
@@ -154,18 +155,8 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-  HAL_RTC_GetTime(&hrtc, &currentTime, RTC_FORMAT_BIN);
-  HAL_RTC_GetDate(&hrtc, &currentDate, RTC_FORMAT_BIN);
+  get_current_timestamp();
 
-  currTime.tm_year = currentDate.Year + 2019;  // In fact: 2000 + 18 - 1900
-  currTime.tm_mday = currentDate.Date;
-  currTime.tm_mon  = currentDate.Month;
-
-  currTime.tm_hour = currentTime.Hours;
-  currTime.tm_min  = currentTime.Minutes;
-  currTime.tm_sec  = currentTime.Seconds;
-
-  timestamp = mktime(&currTime);
   wifiRST(huart1);
   //HAL_Delay(1000);
   wifiInit(huart1);
@@ -176,6 +167,7 @@ int main(void)
   CCS811_INIT();
   ccs811_init_complete = 1;
   connectWifi("WeatherBox", "WinDrone807", huart1);
+  timestamp_power_on = timestamp;
   //HAL_Delay(5000);
   HAL_TIM_Base_Start_IT(&htim2);
 
@@ -819,6 +811,33 @@ void wifi_get_timestamp()
 //	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
 //	HAL_UART_Transmit(&huart1, (uint8_t *) recv, strlen(recv), 500);
 	HAL_UART_Receive(&huart1, &receiveBuffer0, strlen(receiveBuffer0), 5000);
+}
+
+/*
+ * 	@brief Function to set time_t timestamp above to the current timestamp
+ * 	IMPORTANT: ONLY USE AFTER WE GET TIMESTAMP FROM SERVER!
+ *
+ *
+ *  https://stackoverflow.com/questions/48440051/how-to-generate-a-timestamp-in-stm32f303
+ *  You must call HAL_RTC_GetDate() after HAL_RTC_GetTime() to unlock the values
+ *  in the higher-order calendar shadow registers to ensure consistency between the time and date values.
+ *  Reading RTC current time locks the values in calendar shadow registers until Current date is read
+ *  to ensure consistency between the time and date values.
+ */
+void get_current_timestamp()
+{
+	HAL_RTC_GetTime(&hrtc, &currentTime, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &currentDate, RTC_FORMAT_BIN);
+
+	currTime.tm_year = currentDate.Year + 2019;  // In fact: 2000 + 18 - 1900
+	currTime.tm_mday = currentDate.Date;
+	currTime.tm_mon  = currentDate.Month;
+
+	currTime.tm_hour = currentTime.Hours;
+	currTime.tm_min  = currentTime.Minutes;
+	currTime.tm_sec  = currentTime.Seconds;
+
+	timestamp = mktime(&currTime);
 }
 /* USER CODE END 4 */
 

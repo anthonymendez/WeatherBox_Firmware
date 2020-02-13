@@ -131,6 +131,7 @@ extern int ccs811_init_complete;
 	/* RTC Variables */
 extern RTC_TimeTypeDef currentTime;
 extern RTC_DateTypeDef currentDate;
+extern time_t timestamp_power_on;
 extern time_t timestamp;
 extern struct tm currTime;
 
@@ -228,8 +229,8 @@ void TIM2_IRQHandler(void)
   float bme280_humidity = 0;
   float md_wind_speed = 0;
   float md_temp = 0;
-  uint64_t timestamp = time(NULL);
   char data[250];
+  get_current_timestamp();
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
