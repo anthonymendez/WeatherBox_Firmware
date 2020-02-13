@@ -662,11 +662,13 @@ static void CCS811_INIT(void)
 	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
 	ccs811_init_rslt |= ccs811_read_fw_app_version(&ccs811_firmware_app_version, &ccs811_device);
 	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
-	// TODO: Figure out why reading NTC or Baseline causes status error
-//	ccs811_init_rslt |= ccs811_read_ntc(&ccs811_ntc_data, &ccs811_device);
-//	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
-//	ccs811_init_rslt |= ccs811_read_baseline_reg(&ccs811_baseline, &ccs811_device);
-//	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
+	/* NTC Register requires external temperature sensor to be hooked up using resistors.
+	 * See Programming Datasheet
+	 *	ccs811_init_rslt |= ccs811_read_ntc(&ccs811_ntc_data, &ccs811_device);
+	 *	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
+	*/
+	ccs811_init_rslt |= ccs811_read_baseline_reg(&ccs811_baseline, &ccs811_device);
+	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
 }
 
 /**
