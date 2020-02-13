@@ -243,7 +243,6 @@ void TIM2_IRQHandler(void)
   /* Data is output to comp_data */
   bme280_read_data_forced_mode(&bme280_device);
 
-  /*TODO: CCS811 measured data doesn't seem right. */
   ccs811_rslt = CCS811_OK;
   ccs811_rslt |= ccs811_read_status_reg(&ccs811_device);
   /* Format Environmental Data Struct */
@@ -254,15 +253,8 @@ void TIM2_IRQHandler(void)
   if (ccs811_device.status_reg & CCS811_STATUS_DATA_READY_MSK)
   {
 	  /* Read Algorithm Results from CCS811 */
-	  // TODO: Change how we handle these results when data is not ready
+	  /* TODO: Wait 20 min at startup for CCS811 burnin */
 	  ccs811_rslt |= ccs811_read_alg_result_data(&ccs811_measured_data, &ccs811_device);
-  }
-  else
-  {
-	  ccs811_measured_data.eco2 = -1;
-	  ccs811_measured_data.error_id = 0;
-	  ccs811_measured_data.raw_data = -1;
-	  ccs811_measured_data.tvoc = -1;
   }
 
   /* Calculations Done Here */
@@ -272,23 +264,44 @@ void TIM2_IRQHandler(void)
   bme280_humidity = comp_data.humidity / 1024.0; // Output is in percentage... so 43.33 is 43.33 %rH
   bme280_pressure = comp_data.pressure * 0.01; // hPa Pressure Units... for Debug Purposes
 
-  /* Transmit over WiFi */
-  /* TODO: Wait 20 min at startup for CCS811 burnin */
-  sprintf(data, "{ \"system_id\":\"%lu%lu%lu\", "
-		  	  	  "\"timestamp\":\"-1\", "
-		  	  	  "\"temperature\":\"%f\", "
-		  	  	  "\"wind_speed\":\"%f\", "
-		  	  	  "\"pressure\":\"%f\", "
-		  	  	  "\"humidity\":\"%f\", "
-		  	  	  "\"air_quality\":\"%u\" }",
-				  stm32_dev_id_word0,
-				  stm32_dev_id_word1,
-				  stm32_dev_id_word2,
-				  bme280_temperature,
-				  md_wind_speed,
-				  bme280_pressure,
-				  bme280_humidity,
-				  ccs811_measured_data.eco2);
+  /* Transmit over WiFi
+   * Only transmit CCS811 device if data was ready to be read
+   * TODO: Change how we construct the JSON String
+   */
+  if (ccs811_device.status_reg & CCS811_STATUS_DATA_READY_MSK)
+  {
+	  sprintf(data, "{ \"system_id\":\"%lu%lu%lu\", "
+	  		  	  	  "\"timestamp\":\"-1\", "
+	  		  	  	  "\"temperature\":\"%f\", "
+	  		  	  	  "\"wind_speed\":\"%f\", "
+	  		  	  	  "\"pressure\":\"%f\", "
+	  		  	  	  "\"humidity\":\"%f\", "
+	  		  	  	  "\"air_quality\":\"%u\" }",
+	  				  stm32_dev_id_word0,
+	  				  stm32_dev_id_word1,
+	  				  stm32_dev_id_word2,
+	  				  bme280_temperature,
+	  				  md_wind_speed,
+	  				  bme280_pressure,
+	  				  bme280_humidity,
+	  				  ccs811_measured_data.eco2);
+  }
+  else
+  {
+	  sprintf(data, "{ \"system_id\":\"%lu%lu%lu\", "
+	  	  		  	  "\"timestamp\":\"-1\", "
+	  	  		  	  "\"temperature\":\"%f\", "
+	  	  		  	  "\"wind_speed\":\"%f\", "
+	  	  		  	  "\"pressure\":\"%f\", "
+	  	  		  	  "\"humidity\":\"%f\", }",
+	  	  			  stm32_dev_id_word0,
+	  	  			  stm32_dev_id_word1,
+	  	  			  stm32_dev_id_word2,
+	  	  			  bme280_temperature,
+	  	  			  md_wind_speed,
+	  	  			  bme280_pressure,
+	  	  			  bme280_humidity);
+  }
 
   transmitWifi(data, huart1);
 
