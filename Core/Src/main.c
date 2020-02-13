@@ -667,7 +667,6 @@ static void CCS811_INIT(void)
 //	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
 //	ccs811_init_rslt |= ccs811_read_baseline_reg(&ccs811_baseline, &ccs811_device);
 //	ccs811_init_rslt |= ccs811_read_status_reg(&ccs811_device);
-	// TODO: Check App Start and see if it works or not
 }
 
 /**
