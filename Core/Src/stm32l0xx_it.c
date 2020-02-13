@@ -254,6 +254,7 @@ void TIM2_IRQHandler(void)
   if (ccs811_device.status_reg & CCS811_STATUS_DATA_READY_MSK)
   {
 	  /* Read Algorithm Results from CCS811 */
+	  // TODO: Change how we handle these results when data is not ready
 	  ccs811_rslt |= ccs811_read_alg_result_data(&ccs811_measured_data, &ccs811_device);
   }
   else
