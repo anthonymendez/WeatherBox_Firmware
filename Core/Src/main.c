@@ -62,6 +62,7 @@ uint32_t stm32_dev_id_word2;
 	/* Timeouts in milliseconds */
 const int SPI_TIMEOUT = 500;
 const int I2C_TIMEOUT = 500;
+const int ADC_TIMEOUT = 500;
 
 	/* BME280 Variables */
 int bme280_init_complete = 0;

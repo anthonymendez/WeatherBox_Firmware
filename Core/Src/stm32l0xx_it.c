@@ -95,22 +95,29 @@ void bme280_read_data_forced_mode(struct bme280_dev*);
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN EV */
-/* Unique Device ID */
+	/* Unique Device ID */
 extern uint32_t stm32_dev_id_word0;
 extern uint32_t stm32_dev_id_word1;
 extern uint32_t stm32_dev_id_word2;
+
+	/* Timeouts in milliseconds */
+extern const int SPI_TIMEOUT;
+extern const int I2C_TIMEOUT;
+extern const int ADC_TIMEOUT;
+
+	/* HAL Library Configuration Handlers */
 extern ADC_HandleTypeDef hadc;
 extern SPI_HandleTypeDef hspi1;
 extern I2C_HandleTypeDef hi2c1;
 extern UART_HandleTypeDef huart1;
+
+	/* BME280 Variables */
 extern int bme280_init_complete;
 extern struct bme280_settings bme280_device_settings;
 extern struct bme280_dev bme280_device;
 extern int8_t bme280_rslt;
 extern int8_t bme280_init_rslt;
 extern uint8_t bme280_settings_sel;
-extern const int SPI_TIMEOUT;
-extern const int I2C_TIMEOUT;
 extern struct bme280_data comp_data;
 
 	/* CCS811 Variables */
@@ -120,6 +127,13 @@ extern struct ccs811_dev ccs811_device;
 extern int8_t ccs811_init_rslt;
 extern int8_t ccs811_rslt;
 extern int ccs811_init_complete;
+
+	/* RTC Variables */
+extern RTC_TimeTypeDef currentTime;
+extern RTC_DateTypeDef currentDate;
+extern time_t timestamp;
+extern struct tm currTime;
+
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -221,27 +235,24 @@ void TIM2_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
   Toggle_User_LED();
-  if (bme280_init_complete == 0)
-  {
-	  return;
-  }
 
+  // TODO: Abstract this out into it's own function (not drivers)
   HAL_ADC_Start(&hadc);
-  if(HAL_ADC_PollForConversion(&hadc, 500)== HAL_OK)
+  if(HAL_ADC_PollForConversion(&hadc, ADC_TIMEOUT)== HAL_OK)
 	  wind_speed_adc = HAL_ADC_GetValue(&hadc);
   HAL_ADC_Start(&hadc);
-  if(HAL_ADC_PollForConversion(&hadc, 500)== HAL_OK)
+  if(HAL_ADC_PollForConversion(&hadc, ADC_TIMEOUT)== HAL_OK)
   	  wind_temp_adc = HAL_ADC_GetValue(&hadc);
 
   HAL_GPIO_TogglePin(GPIOB, Dust_LED_Pin);
   HAL_ADC_Start(&hadc);
-  if(HAL_ADC_PollForConversion(&hadc, 500)== HAL_OK)
+  if(HAL_ADC_PollForConversion(&hadc, ADC_TIMEOUT)== HAL_OK)
   	  dust_adc = HAL_ADC_GetValue(&hadc);
   HAL_ADC_Stop(&hadc);
   HAL_GPIO_TogglePin(GPIOB, Dust_LED_Pin);
   dust_V = adc_to_voltage(dust_adc);
-  /* Data is output to comp_data */
-  bme280_read_data_forced_mode(&bme280_device);
+  /* Calculate Windspeed based on ADC Values */
+  calculate_wind_speed(wind_speed_adc, wind_temp_adc, &md_wind_speed, &md_temp);
 
   ccs811_rslt = CCS811_OK;
   ccs811_rslt |= ccs811_read_status_reg(&ccs811_device);
@@ -258,8 +269,9 @@ void TIM2_IRQHandler(void)
   }
 
   /* Calculations Done Here */
+  /* Data is output to comp_data */
   // TODO: Double check later if this is properly compensated
-  calculate_wind_speed(wind_speed_adc, wind_temp_adc, &md_wind_speed, &md_temp);
+  bme280_read_data_forced_mode(&bme280_device);
   bme280_temperature = comp_data.temperature * 0.01; // Celsius
   bme280_humidity = comp_data.humidity / 1024.0; // Output is in percentage... so 43.33 is 43.33 %rH
   bme280_pressure = comp_data.pressure * 0.01; // hPa Pressure Units... for Debug Purposes
