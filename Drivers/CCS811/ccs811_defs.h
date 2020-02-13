@@ -110,7 +110,7 @@
 #define CCS811_APP_ERASE_BYTE_LEN            UINT8_C(0x04)
 #define CCS811_APP_DATA_BYTE_LEN             UINT8_C(0x09)
 #define CCS811_APP_VERIFY_BYTE_LEN           UINT8_C(0x01)
-#define CCS811_APP_START_BYTE_LEN            UINT8_C(0x01)
+#define CCS811_APP_START_BYTE_LEN            UINT8_C(0x00)
 #define CCS811_SW_RESET_BYTE_LEN             UINT8_C(0x04)
 
 /**\name Sensor Operation Modes */

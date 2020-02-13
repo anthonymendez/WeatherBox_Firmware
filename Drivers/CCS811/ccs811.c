@@ -138,6 +138,14 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 			break;
 		}
 
+		/* Read Status Reg and check if app start was successful despite error code */
+		ccs811_read_status_reg(dev);
+
+		if (dev->status_reg & CCS811_STATUS_FW_MODE_MSK)
+		{
+			break;
+		}
+
 		/* Try Again */
 		try_count--;
 
