@@ -320,18 +320,7 @@ void TIM2_IRQHandler(void)
 
   transmitWifi(data, huart1);
 
-//  /* Toggle SS1 Pin Low to select sensor */
-    HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
-//  // TODO: Read from Sensor
-//  HAL_GPIO_TogglePin(SS1_GPIO_Port, SS1_Pin);
-//  /* Toggle SS1 High to un-select sensor */
-//
-//  /* Toggle SS2 Pin Low to select sensor */
-//  HAL_GPIO_TogglePin(SS2_GPIO_Port, SS2_Pin);
-//  // TODO: Read from Sensor
-//  HAL_GPIO_TogglePin(SS2_GPIO_Port, SS2_Pin);
-//  /* Toggle SS2 High to un-select sensor */
-
+  /* TODO: Read from WiFi Module success code */
   /* USER CODE END TIM2_IRQn 1 */
 }
 
@@ -431,7 +420,6 @@ static float adc_to_voltage(uint32_t adc_value)
  *	V0°C, the voltage at zero degrees C is 400 mV
  *	Tambient = ( Vout – 0.400 ) / 0.0195
  *	TODO: Wait 40 seconds until we do the first measurement to let the wind sensor stabilize
- *	TODO: Use the Bosch sensor for ambiant temperature instead of the onboard Modern Device Sensor
  * 	https://moderndevice.com/uncategorized/calibrating-rev-p-wind-sensor-new-regression/?preview=true
  */
 static void calculate_wind_speed(uint32_t wind_speed_adc, uint32_t wind_temp_adc, float *wind_speed, float *temp_amb)

@@ -712,8 +712,6 @@ void user_delay_ms(uint32_t milliseconds)
 	HAL_Delay(milliseconds);
 }
 
-/* TODO: Figure out why we get a error code of 3 (0b11) CCS811 */
-
 /*
  *	@brief Function Pointer for reading data from the BME280 or CCS811 using the I2C protocol.
  * 	@param[in] dev_id : I2C address of the device.
