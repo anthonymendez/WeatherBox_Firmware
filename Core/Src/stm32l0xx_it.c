@@ -247,10 +247,12 @@ void TIM2_IRQHandler(void)
 
   HAL_GPIO_TogglePin(GPIOB, Dust_LED_Pin);
   HAL_ADC_Start(&hadc);
+  HAL_Delay(280);
   if(HAL_ADC_PollForConversion(&hadc, ADC_TIMEOUT)== HAL_OK)
   	  dust_adc = HAL_ADC_GetValue(&hadc);
   HAL_ADC_Stop(&hadc);
   HAL_GPIO_TogglePin(GPIOB, Dust_LED_Pin);
+  HAL_Delay(9680);
   dust_V = adc_to_voltage(dust_adc);
   /* Calculate Windspeed based on ADC Values */
   calculate_wind_speed(wind_speed_adc, wind_temp_adc, &md_wind_speed, &md_temp);

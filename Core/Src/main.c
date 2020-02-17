@@ -571,7 +571,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(SS1_GPIO_Port, SS1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SS2_Pin|Dust_LED_Pin|CCS811_RST_Pin|CCS811_WAKE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, SS2_Pin|CCS811_RST_Pin|CCS811_WAKE_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(Dust_LED_GPIO_Port, Dust_LED_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
