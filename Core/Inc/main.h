@@ -67,7 +67,6 @@ int8_t ccs811_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_
 void user_delay_ms(uint32_t);
 int8_t user_i2c_read(uint8_t, uint8_t, uint8_t*, uint16_t);
 int8_t user_i2c_write(uint8_t, uint8_t, uint8_t*, uint16_t);
-void wifi_get_timestamp();
 void get_current_timestamp();
 /* USER CODE END EFP */
 

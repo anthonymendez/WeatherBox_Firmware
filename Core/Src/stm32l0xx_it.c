@@ -81,7 +81,6 @@ void Toggle_User_LED();
 void Toggle_ADC_Chip_Select();
 void HAL_SPI_Transmit_Start();
 void Read_ADC(uint8_t, uint16_t*);
-static uint16_t reverse(uint16_t);
 static float adc_to_voltage(uint32_t);
 static void calculate_wind_speed(uint32_t, uint32_t, float*, float*);
 void bme280_read_data_forced_mode(struct bme280_dev*);
@@ -374,22 +373,6 @@ void Read_ADC(uint8_t adc_ch_select, uint16_t *output)
 	Toggle_ADC_Chip_Select();
 	/* Set Output to adc_value */
 	*output = ADC_16_TO_10_BIT(adc_byte_1, adc_byte_2);
-}
-
-/**
- * 	@brief Function handles converting from LSB o MSB and vice versa
- */
-static uint16_t reverse(uint16_t x)
-{
-	/* Retrieved from http://www.geekviewpoint.com/java/bitwise/reverse_bits_short */
-	uint16_t modX = x;
-	uint16_t y = 0;
-	int position = 7;
-	for(; position >= 0; position--){
-		y += ((modX&1) << position);
-		modX >>= 1;
-	}
-	return (uint16_t) y;
 }
 
 /**

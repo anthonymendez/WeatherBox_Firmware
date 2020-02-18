@@ -16,7 +16,6 @@
 #include "string.h"
 #include <stdio.h>
 
-
 /**
  * @brief resets the wifi module
  *
@@ -55,5 +54,11 @@ void connectWifi(char* ssid, char* pass, UART_HandleTypeDef huart1);
  * @return nothing
  */
 void transmitWifi(char* info, UART_HandleTypeDef huart1);
+
+
+
+//TODO: Add INFO
+void wifi_get_timestamp();
+static unsigned char reverse(unsigned char b);
 
 #endif

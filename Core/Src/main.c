@@ -155,18 +155,17 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-  get_current_timestamp();
-
   wifiRST(huart1);
   //HAL_Delay(1000);
   wifiInit(huart1);
-  wifi_get_timestamp();
   HAL_Delay(1000);
   BME280_INIT();
   bme280_init_complete = 1;
   CCS811_INIT();
   ccs811_init_complete = 1;
-  connectWifi("WeatherBox", "WinDrone807", huart1);
+//  connectWifi("WeatherBox", "WinDrone807", huart1);
+  wifi_get_timestamp(huart1);
+  get_current_timestamp();
   timestamp_power_on = timestamp;
   //HAL_Delay(5000);
   HAL_TIM_Base_Start_IT(&htim2);
@@ -783,35 +782,6 @@ int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint1
 	HAL_Delay(500);
 	HAL_I2C_DeInit(&hi2c1);
 	return rslt;
-}
-
-
-void wifi_get_timestamp()
-{
-	char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
-	HAL_UART_Transmit(&huart1, (uint8_t *) start, strlen(start), 500);
-	HAL_Delay(2000);
-	char send[] = "AT+CIPSEND=";
-	char recv[] = "AT+CIPRECVDATA=1000\r\n";
-	char ret[] = "\r\n";
-	char get[] = "GET /timestamp HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: weatherbox.azurewebsites.net\r\n\r\n";
-	int get_size = (int)(strlen(get));
-	char get_str[sizeof(get_size)];
-	sprintf(get_str, "%u", get_size);
-	char *receiveBuffer0 = calloc(1000, sizeof(char));
-
-
-	// Send Command with size of message
-	HAL_UART_Transmit(&huart1, (uint8_t *) send, strlen(send), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *) get_str, strlen(get_str), 500);
-	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
-	HAL_Delay(1000);
-
-	//Sending GET message
-	HAL_UART_Transmit(&huart1, (uint8_t *) get, strlen(get), 500);
-//	HAL_UART_Transmit(&huart1, (uint8_t *) ret, strlen(ret), 500);
-//	HAL_UART_Transmit(&huart1, (uint8_t *) recv, strlen(recv), 500);
-	HAL_UART_Receive(&huart1, &receiveBuffer0, strlen(receiveBuffer0), 5000);
 }
 
 /*
