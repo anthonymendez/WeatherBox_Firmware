@@ -223,6 +223,8 @@ void TIM2_IRQHandler(void)
   uint32_t wind_temp_adc = 0;
   uint32_t dust_adc = 0;
   float dust_V = 0;
+  float dust_voc = 0.6;
+  float K = 0.5;
   float bme280_pressure = 0;
   float bme280_temperature = 0;
   float bme280_humidity = 0;
@@ -253,6 +255,12 @@ void TIM2_IRQHandler(void)
   HAL_GPIO_TogglePin(GPIOB, Dust_LED_Pin);
   HAL_Delay(9680);
   dust_V = adc_to_voltage(dust_adc);
+  if(dust_V < dust_voc)
+	  dust_voc = dust_V;
+  float dV = dust_V - dust_voc;
+  /* Dust Density in units of ug/m3 */
+  float dust_density = dV / K * 100.0;
+
   /* Calculate Windspeed based on ADC Values */
   calculate_wind_speed(wind_speed_adc, wind_temp_adc, &md_wind_speed, &md_temp);
 
@@ -290,7 +298,8 @@ void TIM2_IRQHandler(void)
 	  		  	  	  "\"wind_speed\":\"%f\", "
 	  		  	  	  "\"pressure\":\"%f\", "
 	  		  	  	  "\"humidity\":\"%f\", "
-	  		  	  	  "\"air_quality\":\"%u\" }",
+	  		  	  	  "\"air_quality\":\"%u\", "
+	  		  	  	  "\"dust\":\"%f\" }",
 	  				  stm32_dev_id_word0,
 	  				  stm32_dev_id_word1,
 	  				  stm32_dev_id_word2,
@@ -298,7 +307,8 @@ void TIM2_IRQHandler(void)
 	  				  md_wind_speed,
 	  				  bme280_pressure,
 	  				  bme280_humidity,
-	  				  ccs811_measured_data.eco2);
+	  				  ccs811_measured_data.eco2,
+					  dust_density);
   }
   else
   {
@@ -307,14 +317,16 @@ void TIM2_IRQHandler(void)
 	  	  		  	  "\"temperature\":\"%f\", "
 	  	  		  	  "\"wind_speed\":\"%f\", "
 	  	  		  	  "\"pressure\":\"%f\", "
-	  	  		  	  "\"humidity\":\"%f\", }",
+	  	  		  	  "\"humidity\":\"%f\", "
+			  	      "\"dust\":\"%f\", }",
 	  	  			  stm32_dev_id_word0,
 	  	  			  stm32_dev_id_word1,
 	  	  			  stm32_dev_id_word2,
 	  	  			  bme280_temperature,
 	  	  			  md_wind_speed,
 	  	  			  bme280_pressure,
-	  	  			  bme280_humidity);
+	  	  			  bme280_humidity,
+					  dust_density);
   }
 
   transmitWifi(data, huart1);
