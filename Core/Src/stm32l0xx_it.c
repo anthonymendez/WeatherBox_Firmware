@@ -31,42 +31,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-	/* ADC Chip Select Pin */
-#define ADC_CS_PIN			SS0_Pin
-	/* ADC Chip Select GPIO Port */
-#define ADC_CS_GPIO_Port	SS0_GPIO_Port
-	/* ADC Start Bit */
-#define ADC_START_BIT 0b00000001
-	/* ADC SGL/Diff + Channel Select
-	 * Leftmost Bit - SGL/Diff
-	 * 2nd Leftmost - D2
-	 * 3rd Leftmost - D1
-	 * 4th Leftmost - D0
-	 */
-#define ADC_DIN_CH0 0b10000000
-#define ADC_DIN_CH1 0b10010000
-#define ADC_DIN_CH2 0b10100000
-#define ADC_DIN_CH3 0b10110000
-#define ADC_DIN_CH4 0b11000000
-#define ADC_DIN_CH5 0b11010000
-#define ADC_DIN_CH6 0b11100000
-#define ADC_DIN_CH7 0b11110000
-	/* Channel Select Mapped to Sensors */
-#define ADC_WIND_SENSOR_SPEED_CH ADC_DIN_CH0
-#define ADC_WIND_SENSOR_TEMP_CH ADC_DIN_CH1
-	/* ADC Output Mask */
-#define ADC_OUTPUT_MASK 0x03FF
-	/* Temperature, Pressure, Humidity Addresses */
-#define TPH_OPEN_ADDRESS 0x77
-#define TPH_CLOSED_ADDRESS 0x76
-	/* Air Quality Addresses */
-#define AQ_OPEN_ADDRESS 0x5B
-#define AQ_CLOSED_ADDRESS 0x5A
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define ADC_16_TO_10_BIT(BYTE_1, BYTE_2)  (((BYTE_1 << 8) | BYTE_2) & ADC_OUTPUT_MASK)
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -78,9 +46,6 @@ float zero_voltage = -1;
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 void Toggle_User_LED();
-void Toggle_ADC_Chip_Select();
-void HAL_SPI_Transmit_Start();
-void Read_ADC(uint8_t, uint16_t*);
 static float adc_to_voltage(uint32_t);
 static void calculate_wind_speed(uint32_t, uint32_t, float*, float*);
 void bme280_read_data_forced_mode(struct bme280_dev*);
@@ -93,6 +58,7 @@ void bme280_read_data_forced_mode(struct bme280_dev*);
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim2;
+extern DMA_HandleTypeDef hdma_usart1_rx;
 /* USER CODE BEGIN EV */
 	/* Unique Device ID */
 extern uint32_t stm32_dev_id_word0;
@@ -212,6 +178,20 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32l0xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles DMA1 channel 2 and channel 3 interrupts.
+  */
+void DMA1_Channel2_3_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel2_3_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel2_3_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart1_rx);
+  /* USER CODE BEGIN DMA1_Channel2_3_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel2_3_IRQn 1 */
+}
 
 /**
   * @brief This function handles TIM2 global interrupt.
@@ -342,49 +322,6 @@ void TIM2_IRQHandler(void)
 void Toggle_User_LED()
 {
 	HAL_GPIO_TogglePin(User_LED_GPIO_Port, User_LED_Pin);
-}
-
-/**
- * 	@brief Toggle ADC Chip Select Pin
- */
-void Toggle_ADC_Chip_Select()
-{
-	HAL_GPIO_TogglePin(ADC_CS_GPIO_Port, ADC_CS_PIN);
-}
-
-/**
- * 	@brief Transmit Start Bit in HAL SPI
- */
-void HAL_SPI_Transmit_Start()
-{
-	uint8_t adc_start = (uint8_t) ADC_START_BIT;
-	HAL_SPI_Transmit(&hspi1, &adc_start, sizeof(adc_start), SPI_TIMEOUT);
-}
-
-/**
- * 	@brief Read MCP3008 ADC based on given channel enum.
- *	Output is set to the pointer of a uint16_t set in the parameters.
- *	Output will be set to 0 before setting the ADC Value to it.
- */
-void Read_ADC(uint8_t adc_ch_select, uint16_t *output)
-{
-	uint8_t adc_byte_1 = 0;
-	uint8_t adc_byte_2 = 0;
-
-	/* Set output to 0 */
-	*output = 0;
-
-	/* Toggle SS0 Pin (CS) Low to use ADC */
-	Toggle_ADC_Chip_Select();
-	/* Send to DIN CH0 Select */
-	HAL_SPI_Transmit_Start();
-	HAL_SPI_TransmitReceive(&hspi1, &adc_ch_select, &adc_byte_1, sizeof(adc_ch_select), SPI_TIMEOUT);
-	/* Read from Dout of ADC */
-	HAL_SPI_Receive(&hspi1, &adc_byte_2, sizeof(adc_byte_2), SPI_TIMEOUT);
-	/* Toggle SS0 High (CS) to signify we're done with a round of the ADC */
-	Toggle_ADC_Chip_Select();
-	/* Set Output to adc_value */
-	*output = ADC_16_TO_10_BIT(adc_byte_1, adc_byte_2);
 }
 
 /**

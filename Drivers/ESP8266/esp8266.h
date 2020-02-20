@@ -16,6 +16,25 @@
 #include "string.h"
 #include <stdio.h>
 
+/* Defines */
+#define UART_DMA_RECEIVE_BUFFER_LENGTH	1000
+#define UART_TIMEOUT 500
+
+// TODO: Add INFO
+HAL_UART_StateTypeDef Transmit(char *pData);
+
+// TODO: Add INFO
+HAL_UART_StateTypeDef Receive_Pause();
+
+// TODO: Add INFO
+HAL_UART_StateTypeDef Receive_Start();
+
+// TODO: Add INFO
+HAL_UART_StateTypeDef Receive_Stop();
+
+// TODO: Add INFO
+void Clear_Receive_Buffer();
+
 /**
  * @brief resets the wifi module
  *
@@ -23,7 +42,7 @@
  *
  * @return nothing
  */
-void wifiRST(UART_HandleTypeDef huart1);
+void wifiRST(UART_HandleTypeDef*);
 
 /**
  * @brief initializes the module by setting mode as client, sets baud rate and UART format
@@ -32,7 +51,7 @@ void wifiRST(UART_HandleTypeDef huart1);
  *
  * @return nothing
  */
-void wifiInit(UART_HandleTypeDef huart1);
+void wifiInit();
 
 /**
  * @brief connects to a wifi access point
@@ -43,7 +62,7 @@ void wifiInit(UART_HandleTypeDef huart1);
  *
  * @return nothing
  */
-void connectWifi(char* ssid, char* pass, UART_HandleTypeDef huart1);
+void connectWifi(char* ssid, char* pass);
 
 /**
  * @brief transmits data to our website, will fix to make more dynamic
@@ -59,6 +78,5 @@ void transmitWifi(char* info, UART_HandleTypeDef huart1);
 
 //TODO: Add INFO
 void wifi_get_timestamp();
-static unsigned char reverse(unsigned char b);
 
 #endif
