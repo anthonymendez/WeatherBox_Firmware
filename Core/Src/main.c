@@ -159,14 +159,13 @@ int main(void)
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
   wifiRST(&huart1);
-  //HAL_Delay(1000);
   wifiInit();
+  connectWifi("WeatherBox", "WinDrone807");
   HAL_Delay(1000);
   BME280_INIT();
   bme280_init_complete = 1;
   CCS811_INIT();
   ccs811_init_complete = 1;
-//  connectWifi("WeatherBox", "WinDrone807", huart1);
   wifi_get_timestamp(huart1);
   get_current_timestamp();
   timestamp_power_on = timestamp;

@@ -42,7 +42,7 @@ void Clear_Receive_Buffer();
  *
  * @return nothing
  */
-void wifiRST(UART_HandleTypeDef*);
+HAL_UART_StateTypeDef wifiRST(UART_HandleTypeDef*);
 
 /**
  * @brief initializes the module by setting mode as client, sets baud rate and UART format
@@ -51,7 +51,7 @@ void wifiRST(UART_HandleTypeDef*);
  *
  * @return nothing
  */
-void wifiInit();
+HAL_UART_StateTypeDef wifiInit();
 
 /**
  * @brief connects to a wifi access point
@@ -62,7 +62,7 @@ void wifiInit();
  *
  * @return nothing
  */
-void connectWifi(char* ssid, char* pass);
+HAL_UART_StateTypeDef connectWifi(char* ssid, char* pass);
 
 /**
  * @brief transmits data to our website, will fix to make more dynamic
@@ -72,11 +72,11 @@ void connectWifi(char* ssid, char* pass);
  *
  * @return nothing
  */
-void transmitWifi(char* info, UART_HandleTypeDef huart1);
+HAL_UART_StateTypeDef transmitWifi(char* info);
 
 
 
 //TODO: Add INFO
-void wifi_get_timestamp();
+HAL_UART_StateTypeDef wifi_get_timestamp();
 
 #endif

@@ -309,7 +309,7 @@ void TIM2_IRQHandler(void)
 					  dust_density);
   }
 
-  transmitWifi(data, huart1);
+  transmitWifi(data);
 
   /* TODO: Read from WiFi Module success code */
   /* USER CODE END TIM2_IRQn 1 */
