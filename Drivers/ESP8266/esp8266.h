@@ -79,4 +79,14 @@ HAL_UART_StateTypeDef transmitWifi(char* info);
 //TODO: Add INFO
 HAL_UART_StateTypeDef wifi_get_timestamp();
 
+/**
+ * @brief searches a string to see if it contains another string given a specific format
+ *
+ * @param string: the string to be searched
+ * @param key: the string you want to find
+ *
+ * @return 0 if not found, pointer of the value following the string if found
+ */
+char* stringParser(char* string, char* key);
+
 #endif

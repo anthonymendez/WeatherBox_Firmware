@@ -188,3 +188,15 @@ HAL_UART_StateTypeDef wifi_get_timestamp(UART_HandleTypeDef huart1)
 
 	return status;
 }
+
+char* stringParser(char* string, char* key)
+{
+	char* found = strstr(string, key);
+	if(!found)
+		return 0;
+	else
+	{
+		found+= strlen(key);
+	}
+	return found;
+}

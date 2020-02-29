@@ -212,11 +212,15 @@ void TIM2_IRQHandler(void)
   float md_temp = 0;
   char data[250];
   get_current_timestamp();
+  char testParse[] = "timestamp: 11:43PM";
+  char parseKey[] = "timestamp: ";
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
   Toggle_User_LED();
+
+  char* test = stringParser(testParse, parseKey);
 
   // TODO: Abstract this out into it's own function (not drivers)
   HAL_ADC_Start(&hadc);
