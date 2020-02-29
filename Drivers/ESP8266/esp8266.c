@@ -2,7 +2,7 @@
  * esp8266.c
  *
  *  Created on: Jan 16, 2020
- *      Author: Stephan Kim, Anthony Mendez?
+ *      Author: Stephan Kim, Anthony Mendez
  */
 #include "esp8266.h"
 
@@ -116,8 +116,8 @@ HAL_UART_StateTypeDef transmitWifi(char* info)
 {
 	HAL_UART_StateTypeDef status = HAL_OK;
 
-	char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
-	status |= Transmit_Receive(start);
+	//char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
+	//status |= Transmit_Receive(start);
 	HAL_Delay(2000);
 	char send[] = "AT+CIPSEND=";
 	char ret[] = "\r\n";
@@ -148,6 +148,8 @@ HAL_UART_StateTypeDef transmitWifi(char* info)
 	status |= Transmit_Receive(info);
 	status |= Transmit_Receive(ret);
 
+
+
 	return status;
 }
 
@@ -171,7 +173,7 @@ HAL_UART_StateTypeDef wifi_get_timestamp(UART_HandleTypeDef huart1)
 	// TODO: Add functions for specific commands like CIPSEND
 	status |= Transmit_Receive(send);
 	status |= Transmit_Receive(get_str);
-//	status |= Transmit_Receive(ret);
+	status |= Transmit_Receive(ret);
 //	HAL_UART_Transmit(huart, (uint8_t *) send, strlen(send), 500);
 //	HAL_UART_Transmit(huart, (uint8_t *) get_str, strlen(get_str), 500);
 //	HAL_UART_Transmit(huart, (uint8_t *) ret, strlen(ret), 500);
@@ -179,7 +181,7 @@ HAL_UART_StateTypeDef wifi_get_timestamp(UART_HandleTypeDef huart1)
 
 	//Sending GET message
 	status |= Transmit_Receive(get);
-//	status |= Transmit_Receive(ret);
+	status |= Transmit_Receive(ret);
 //	status |= Transmit_Receive(recv);
 //	HAL_UART_Transmit(huart, (uint8_t *) get, strlen(get), 500);
 //	HAL_UART_Transmit(huart, (uint8_t *) ret, strlen(ret), 500);

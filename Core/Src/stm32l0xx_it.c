@@ -94,6 +94,7 @@ extern int8_t ccs811_rslt;
 extern int ccs811_init_complete;
 
 	/* RTC Variables */
+extern unsigned char UART_DMA_Receive_Buffer;
 extern RTC_TimeTypeDef currentTime;
 extern RTC_DateTypeDef currentDate;
 extern time_t timestamp_power_on;
@@ -212,15 +213,12 @@ void TIM2_IRQHandler(void)
   float md_temp = 0;
   char data[250];
   get_current_timestamp();
-  char testParse[] = "timestamp: 11:43PM";
-  char parseKey[] = "timestamp: ";
+
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
   Toggle_User_LED();
-
-  char* test = stringParser(testParse, parseKey);
 
   // TODO: Abstract this out into it's own function (not drivers)
   HAL_ADC_Start(&hadc);
@@ -302,7 +300,7 @@ void TIM2_IRQHandler(void)
 	  	  		  	  "\"wind_speed\":\"%f\", "
 	  	  		  	  "\"pressure\":\"%f\", "
 	  	  		  	  "\"humidity\":\"%f\", "
-			  	      "\"dust\":\"%f\", }",
+			  	      "\"dust\":\"%f\" }",
 	  	  			  stm32_dev_id_word0,
 	  	  			  stm32_dev_id_word1,
 	  	  			  stm32_dev_id_word2,
