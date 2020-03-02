@@ -60,7 +60,7 @@ HAL_UART_StateTypeDef wifiInit();
  * @param pass: password for access point
  * @param huart1: the UART typdef
  *
- * @return nothing
+ * @return status
  */
 HAL_UART_StateTypeDef connectWifi(char* ssid, char* pass);
 
@@ -70,9 +70,19 @@ HAL_UART_StateTypeDef connectWifi(char* ssid, char* pass);
  * @param info: POST message payload
  * @param huart1: the UART typedef
  *
- * @return nothing
+ * @return status
  */
 HAL_UART_StateTypeDef transmitWifi(char* info);
+
+/**
+ *@brief AT+CIPSEND implementation
+ *
+ *@param size: size of data to be sent
+ *@param info: data to send
+ *
+ *return status
+ */
+HAL_UART_StateTypeDef cipSend(char* size, char* info);
 
 
 

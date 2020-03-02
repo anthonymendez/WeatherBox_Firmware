@@ -2,7 +2,7 @@
  * esp8266.c
  *
  *  Created on: Jan 16, 2020
- *      Author: Stephan Kim, Anthony Mendez
+ *      Authors: Stephan Kim, Anthony Mendez
  */
 #include "esp8266.h"
 
@@ -14,6 +14,7 @@
 
 unsigned char UART_DMA_Receive_Buffer[UART_DMA_RECEIVE_BUFFER_LENGTH];
 UART_HandleTypeDef *huart;
+char ret[] = "\r\n";
 
 HAL_UART_StateTypeDef Transmit_Receive(char *pData)
 {
@@ -115,12 +116,7 @@ HAL_UART_StateTypeDef connectWifi(char* ssid, char* pass)
 HAL_UART_StateTypeDef transmitWifi(char* info)
 {
 	HAL_UART_StateTypeDef status = HAL_OK;
-
-	//char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
-	//status |= Transmit_Receive(start);
 	HAL_Delay(2000);
-	char send[] = "AT+CIPSEND=";
-	char ret[] = "\r\n";
 	char postFormat[] = "POST /map/data HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: weatherbox.azurewebsites.net\r\nContent-Type: application/json\r\nContent-Length: %i\r\n\r\n";
 	char post[sizeof(postFormat)];
 	int jsonsize = (int)(strlen(info));
@@ -131,24 +127,12 @@ HAL_UART_StateTypeDef transmitWifi(char* info)
 	char postStr[sizeof(postsize)];
 	sprintf(postStr, "%u", postsize);
 
-
-	// Send Command with size of message
-	status |= Transmit_Receive(send);
-	status |= Transmit_Receive(postStr);
-	status |= Transmit_Receive(ret);
-	HAL_Delay(1000);
-
 	//Sending POST message
-	status |= Transmit_Receive(post);
-	status |= Transmit_Receive(ret);
-	HAL_Delay(2000);
-	status |= Transmit_Receive(send);
-	status |= Transmit_Receive(jsonStr);
-	status |= Transmit_Receive(ret);
-	status |= Transmit_Receive(info);
-	status |= Transmit_Receive(ret);
-
-
+	status |= cipSend(postStr, post);
+	HAL_Delay(1000);
+	
+	//Sending info in JSON format
+	status |= cipSend(jsonStr, info);
 
 	return status;
 }
@@ -157,40 +141,42 @@ HAL_UART_StateTypeDef transmitWifi(char* info)
 HAL_UART_StateTypeDef wifi_get_timestamp(UART_HandleTypeDef huart1)
 {
 	HAL_UART_StateTypeDef status = HAL_OK;
-
+	
+	//Start connection to website
 	char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
 	status |= Transmit_Receive(start);
 	HAL_Delay(2000);
-	char send[] = "AT+CIPSEND=";
-	char recv[] = "AT+CIPRECVDATA=1000\r\n";
-	char ret[] = "\r\n";
+	
 	char get[] = "GET /timestamp HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: weatherbox.azurewebsites.net\r\n\r\n";
 	int get_size = (int)(strlen(get));
 	char get_str[sizeof(get_size)];
 	sprintf(get_str, "%u", get_size);
 
-	// Send Command with size of message
-	// TODO: Add functions for specific commands like CIPSEND
-	status |= Transmit_Receive(send);
-	status |= Transmit_Receive(get_str);
-	status |= Transmit_Receive(ret);
-//	HAL_UART_Transmit(huart, (uint8_t *) send, strlen(send), 500);
-//	HAL_UART_Transmit(huart, (uint8_t *) get_str, strlen(get_str), 500);
-//	HAL_UART_Transmit(huart, (uint8_t *) ret, strlen(ret), 500);
-//	HAL_Delay(1000);
-
-	//Sending GET message
-	status |= Transmit_Receive(get);
-	status |= Transmit_Receive(ret);
-//	status |= Transmit_Receive(recv);
-//	HAL_UART_Transmit(huart, (uint8_t *) get, strlen(get), 500);
-//	HAL_UART_Transmit(huart, (uint8_t *) ret, strlen(ret), 500);
-//	HAL_UART_Transmit(huart, (uint8_t *) recv, strlen(recv), 500);
-//	status |= HAL_UART_Receive_DMA(huart, (uint8_t *) UART_DMA_Receive_Buffer, UART_DMA_RECEIVE_BUFFER_LENGTH);
+	// Send Command with GET message and size
+	status |= cipSend(get_str, get);
 
 	return status;
 }
 
+/*
+ *@brief AT+CIPSEND implementation
+ */
+HAL_UART_StateTypeDef cipSend(char* size, char* info)
+{
+	HAL_UART_StateTypeDef status = HAL_OK;
+	char send[] = "AT+CIPSEND=";
+	status |= Transmit_Receive(send);
+	status |= Transmit_Receive(size);
+	status |= Transmit_Receive(ret);
+	HAL_Delay(100);
+	status |= Transmit_Receive(info);
+	status |= Transmit_Receive(ret);
+	
+	return status;
+}
+/**
+ * @brief searches a string to see if it contains another string given a specific format
+ */
 char* stringParser(char* string, char* key)
 {
 	char* found = strstr(string, key);
