@@ -116,7 +116,8 @@ HAL_UART_StateTypeDef connectWifi(char* ssid, char* pass)
 HAL_UART_StateTypeDef transmitWifi(char* info)
 {
 	HAL_UART_StateTypeDef status = HAL_OK;
-	HAL_Delay(2000);
+	
+	status |= ping();
 	char postFormat[] = "POST /map/data HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: weatherbox.azurewebsites.net\r\nContent-Type: application/json\r\nContent-Length: %i\r\n\r\n";
 	char post[sizeof(postFormat)];
 	int jsonsize = (int)(strlen(info));
@@ -142,10 +143,7 @@ HAL_UART_StateTypeDef wifi_get_timestamp(UART_HandleTypeDef huart1)
 {
 	HAL_UART_StateTypeDef status = HAL_OK;
 	
-	//Start connection to website
-	char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
-	status |= Transmit_Receive(start);
-	HAL_Delay(2000);
+	status |= ping();
 	
 	char get[] = "GET /timestamp HTTP/1.1\r\nAccept: \"*/*\"\r\nHost: weatherbox.azurewebsites.net\r\n\r\n";
 	int get_size = (int)(strlen(get));
@@ -174,6 +172,22 @@ HAL_UART_StateTypeDef cipSend(char* size, char* info)
 	
 	return status;
 }
+
+/**
+ * @brief pings the website
+ *
+ */
+ HAL_UART_StateTypeDef ping()
+ {
+	HAL_UART_StateTypeDef status = HAL_OK;
+	//Start connection to website
+	char start[] = "AT+CIPSTART=\"TCP\",\"weatherbox.azurewebsites.net\",80\r\n";
+	status |= Transmit_Receive(start);
+	HAL_Delay(1000);
+	
+	return status;
+ }
+ 
 /**
  * @brief searches a string to see if it contains another string given a specific format
  */

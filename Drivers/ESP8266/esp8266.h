@@ -90,6 +90,13 @@ HAL_UART_StateTypeDef cipSend(char* size, char* info);
 HAL_UART_StateTypeDef wifi_get_timestamp();
 
 /**
+ * @brief pings the website
+ * 
+ * @return status
+ */
+ HAL_UART_StateTypeDef ping();
+
+/**
  * @brief searches a string to see if it contains another string given a specific format
  *
  * @param string: the string to be searched
